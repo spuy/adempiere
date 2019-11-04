@@ -59,6 +59,13 @@ public class CreateExpenseReportFromProject extends CreateExpenseReportFromProje
 				orderLine.set_ValueOfColumn("ReleasedQty", qtyAvailable.subtract(qty));
 				orderLine.saveEx();
 			}
+
+			if(qty.compareTo(Env.ZERO)==0){
+				orderLine.setQtyLostSales(orderLine.getQtyReserved());
+				orderLine.setQtyReserved(Env.ZERO);
+				orderLine.saveEx();
+			}
+
 			MOrder order = orderLine.getParent();
 			//	Create new
 			if(expenseReport == null) {
