@@ -34,7 +34,9 @@ import org.compiere.model.MProjectLine;
 import org.compiere.model.MProjectPhase;
 import org.compiere.model.MProjectTask;
 import org.compiere.model.MUOMConversion;
+import org.compiere.util.DB;
 import org.compiere.util.Env;
+import org.compiere.util.TimeUtil;
 import org.compiere.util.Util;
 
 
@@ -168,8 +170,9 @@ public class ProjectPhaseGenOrder  extends ProjectPhaseGenOrderAbstract
 		for (MProjectLine pLine : projectLines) {
 
 			Timestamp datePromised = (Timestamp) pLine.get_Value("DatePromised");
+			Timestamp dateOrder = TimeUtil.addDays(order.getDateOrdered(), -1);
 
-			if (datePromised.compareTo(order.getDateOrdered()) < 0)
+			if (datePromised.compareTo(dateOrder) <= 0)
 				throw new AdempiereException("@DatePromisedProjectLine@");
 		}
 
