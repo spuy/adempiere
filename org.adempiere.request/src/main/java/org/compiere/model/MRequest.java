@@ -1140,7 +1140,7 @@ public class MRequest extends X_R_Request
 				
 				//	Don't send mail to oneself
 				if (userId == updatedBy
-						&& !from.isIncludeOwnChanges())
+						&& (from != null && !from.isIncludeOwnChanges()))
 					continue;
 				
 				//	No confidential to externals
