@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.Level;
 
+import org.adempiere.exceptions.AdempiereException;
 import org.adempiere.model.GridTabWrapper;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
@@ -342,8 +343,12 @@ public class CalloutProject extends CalloutEngine
 	 * @return
 	 */
 	public String quantity(Properties ctx, int windowNo, GridTab tab, GridField field, Object value) {
+
 		if (isCalloutActive() || value == null)
 			return "";
+
+		int productId = 0;
+
 		//	Validate columns
 		if(!field.getColumnName().equals("PlannedQty")
 				&& !field.getColumnName().equals("Qty")
@@ -352,12 +357,22 @@ public class CalloutProject extends CalloutEngine
 				&& !field.getColumnName().equals("M_Product_ID"))  {
 			return "";
 		}
+
 		int uOmToId = Env.getContextAsInt(ctx, windowNo, "C_UOM_ID");
 		//	get values
-		int productId = (int) tab.getValue("M_Product_ID");
-		if(productId <= 0) {
-			return "";
+		if(tab.getValue("M_Product_ID") != null){
+
+			productId = (int) tab.getValue("M_Product_ID");
+			if(productId <= 0) {
+				return "";
+			}
+
+		} else {
+
+			if(field.getColumnName().equals("QtyEntered"))
+				throw new AdempiereException("Debe seleccionar producto");
 		}
+
 		BigDecimal quantityEntered = (BigDecimal) tab.getValue("QtyEntered");
 		BigDecimal plannedQuantity = (BigDecimal) tab.getValue("PlannedQty");
 		if(plannedQuantity == null) {
