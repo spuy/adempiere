@@ -803,6 +803,7 @@ public class AgencyValidator implements ModelValidator
 			MOrder order = new MOrder(expenseReport.getCtx(), orderId, expenseReport.get_TrxName());
 			MInOut inOut = new MInOut(order, 0, expenseReport.getDateReport());
 			inOut.setM_Warehouse_ID(order.getM_Warehouse_ID());
+			inOut.set_ValueOfColumn("S_TimeExpense_ID", expenseReport.get_ID());//Openup. Nicolas Sarlabos. 24/12/2019. #13331.
 			inOut.saveEx();
 			AtomicReference<BigDecimal> totalOrdered = new AtomicReference<BigDecimal>(Env.ZERO);
 			AtomicReference<BigDecimal> totalDelivered = new AtomicReference<BigDecimal>(Env.ZERO);
