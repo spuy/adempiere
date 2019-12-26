@@ -23,65 +23,9 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.adempiere.exceptions.AdempiereException;
-import org.compiere.model.I_AD_Image;
-import org.compiere.model.I_C_BPartner;
-import org.compiere.model.I_C_Commission;
-import org.compiere.model.I_C_CommissionLine;
-import org.compiere.model.I_C_CommissionRun;
-import org.compiere.model.I_C_CommissionSalesRep;
-import org.compiere.model.I_C_CommissionType;
-import org.compiere.model.I_C_Invoice;
-import org.compiere.model.I_C_Order;
-import org.compiere.model.I_C_OrderLine;
-import org.compiere.model.I_C_Project;
-import org.compiere.model.I_C_ProjectPhase;
-import org.compiere.model.I_C_ProjectTask;
-import org.compiere.model.I_C_RfQ;
-import org.compiere.model.I_C_RfQResponse;
-import org.compiere.model.I_R_Request;
-import org.compiere.model.I_S_TimeExpense;
-import org.compiere.model.MAttachment;
-import org.compiere.model.MAttachmentEntry;
-import org.compiere.model.MBPartner;
-import org.compiere.model.MClient;
-import org.compiere.model.MCommission;
-import org.compiere.model.MCommissionLine;
-import org.compiere.model.MCommissionRun;
-import org.compiere.model.MConversionType;
-import org.compiere.model.MCurrency;
-import org.compiere.model.MDocType;
-import org.compiere.model.MImage;
-import org.compiere.model.MInOut;
-import org.compiere.model.MInOutLine;
-import org.compiere.model.MInvoice;
-import org.compiere.model.MInvoiceLine;
-import org.compiere.model.MOrder;
-import org.compiere.model.MOrderLine;
-import org.compiere.model.MOrgInfo;
-import org.compiere.model.MPriceList;
-import org.compiere.model.MPriceListVersion;
-import org.compiere.model.MProduct;
-import org.compiere.model.MProductPrice;
-import org.compiere.model.MProject;
-import org.compiere.model.MProjectPhase;
-import org.compiere.model.MProjectTask;
-import org.compiere.model.MRequest;
-import org.compiere.model.MRequestType;
-import org.compiere.model.MRequestUpdate;
-import org.compiere.model.MRfQLine;
-import org.compiere.model.MRfQLineQty;
-import org.compiere.model.MRfQResponse;
-import org.compiere.model.MStatus;
-import org.compiere.model.MTimeExpense;
-import org.compiere.model.MTimeExpenseLine;
-import org.compiere.model.MTree;
-import org.compiere.model.MTree_NodeBP;
-import org.compiere.model.ModelValidationEngine;
-import org.compiere.model.ModelValidator;
-import org.compiere.model.PO;
-import org.compiere.model.Query;
-import org.compiere.model.X_C_CommissionSalesRep;
+import org.compiere.model.*;
 import org.compiere.process.DocAction;
+import org.compiere.process.DocumentEngine;
 import org.compiere.process.OrderPOCreateAbstract;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
@@ -830,9 +774,107 @@ public class AgencyValidator implements ModelValidator
 //				BigDecimal multiplier = Env.ONE.divide(totalOrdered.get(), MathContext.DECIMAL128).multiply(totalDelivered.get());
 //				generateInOutFromCommissionOrder(order, multiplier);
 //			}
+
+			//Openup. Nicolas Sarlabos. 26/12/2019. #12701.
+            if(!inOut.isSOTrx()){
+
+                MBPartner partner = (MBPartner) inOut.getC_BPartner();
+
+                if(partner.getAD_OrgBP_ID() != null && !partner.getAD_OrgBP_ID().equalsIgnoreCase("")){
+
+                    int orgBP_ID = Integer.parseInt(partner.getAD_OrgBP_ID());
+
+                    if(orgBP_ID == 2000004){//si la organizacion del partner es MANEREL
+
+                        MOrder pOrder = (MOrder) inOut.getC_Order();
+
+                        String sql = "select c_order_id" +
+                                " from c_order" +
+                                " where link_order_id = " + pOrder.get_ID() +
+                                " and issotrx = 'Y'" +
+                                " and docstatus in ('CO','CL')";
+
+                        int orderID = DB.getSQLValueEx(inOut.get_TrxName(), sql);
+
+                        if (orderID > 0){
+
+                            createDeliveryFromSO(inOut, orderID, inOut.get_ValueAsInt("S_TimeExpense_ID"));
+
+                        } else throw new AdempiereException("No se obtuvo orden de venta, completa o cerrada, para la orden de de compra Nro. " + pOrder.getDocumentNo());
+                    }
+                }
+            }//Fin #12701.
 		}
 
-		/**
+    /**
+     * OpenUp. Nicolas Sarlabos. 04/11/2019. #12701.
+     * Metodo que crea la entrega de cliente para la OV asociada a la OC de la recepcion (solo XAXIS).
+     */
+    private void createDeliveryFromSO(MInOut inout, int orderID, int expenseID) {
+
+        MInOut inoutHdr = null;
+        MOrder order = new MOrder (inout.getCtx(), orderID, inout.get_TrxName());
+        MOrderLine[] lines = order.getLines ();
+
+        for (int i = 0; i < lines.length; i++){
+
+            MOrderLine oLine = (MOrderLine) lines [i];
+
+            if(inoutHdr == null){
+
+                //creo cabezal de entrega
+                inoutHdr = new MInOut(order, 0, inout.getMovementDate());
+                inoutHdr.setAD_Org_ID(order.getAD_Org_ID());
+                inoutHdr.setC_BPartner_ID(order.getC_BPartner_ID());
+                inoutHdr.set_ValueOfColumn("S_TimeExpense_ID", expenseID);
+                inoutHdr.saveEx();
+
+            }
+
+            // Genero linea de entrega
+            MInOutLine inoutLine = new MInOutLine(inoutHdr);
+            inoutLine.setC_OrderLine_ID(oLine.get_ID());
+            inoutLine.setM_Product_ID(oLine.getM_Product_ID());
+            inoutLine.setC_UOM_ID(oLine.getC_UOM_ID());
+            inoutLine.setM_AttributeSetInstance_ID(oLine.getM_AttributeSetInstance_ID());
+            inoutLine.setM_Warehouse_ID(oLine.getM_Warehouse_ID());
+
+            MWarehouse warehouse = (MWarehouse)oLine.getM_Warehouse();
+
+            inoutLine.setM_Locator_ID(MLocator.getDefault(warehouse).get_ID());
+
+            int link_line_id = oLine.getLink_OrderLine_ID();
+
+            String sql = "select l.m_inoutline_id" +
+                    " from m_inoutline l" +
+                    " inner join m_inout h on l.m_inout_id = h.m_inout_id" +
+                    " where h.docstatus in ('CO','CL')" +
+                    " and l.c_orderline_id = " + link_line_id +
+                    " and h.issotrx = 'N'" +
+                    " and s_timeexpense_id = " + expenseID;
+
+            int ioLine_id = DB.getSQLValueEx(inout.get_TrxName(), sql);
+
+            if(ioLine_id > 0){
+
+                MInOutLine ref_line = new MInOutLine(inout.getCtx(), ioLine_id, inout.get_TrxName());
+
+                inoutLine.setQtyEntered(ref_line.getQtyEntered());
+                inoutLine.setMovementQty(ref_line.getMovementQty());
+
+                inoutLine.saveEx();
+            }
+        }
+
+        //completo la entrega si tiene lineas, si no elimino el cabezal
+        if(inoutHdr.getLines(true).length > 0){
+            if (!inoutHdr.processIt(DocumentEngine.ACTION_Complete)){
+                throw new AdempiereException (inoutHdr.getProcessMsg());
+            }
+        } else inoutHdr.deleteEx(true);
+    }
+
+    /**
 		 * Reverse Previous commission
 		 * @param sourceInvoice
 		 * @param reverseAmount
