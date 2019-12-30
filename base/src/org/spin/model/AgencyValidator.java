@@ -776,32 +776,35 @@ public class AgencyValidator implements ModelValidator
 //			}
 
 			//Openup. Nicolas Sarlabos. 26/12/2019. #12701.
-            if(!inOut.isSOTrx()){
+            if (expenseReport.getAD_Org_ID() == 2000004) {//si es checkin MANEREL
+                if (inOut.isSOTrx() && inOut.getAD_Org_ID() == 2000004) {
 
-                MBPartner partner = (MBPartner) inOut.getC_BPartner();
+                    MOrder sOrder = (MOrder) inOut.getC_Order();
 
-                if(partner.getAD_OrgBP_ID() != null && !partner.getAD_OrgBP_ID().equalsIgnoreCase("")){
+                    String sql = "select c_order_id" +
+                            " from c_order" +
+                            " where ref_order_id = " + sOrder.get_ID() +
+                            " and issotrx = 'N'" +
+                            " and docstatus in ('CO','CL')";
 
-                    int orgBP_ID = Integer.parseInt(partner.getAD_OrgBP_ID());
+                    int orderID = DB.getSQLValueEx(inOut.get_TrxName(), sql);
 
-                    if(orgBP_ID == 2000004){//si la organizacion del partner es MANEREL
+                    if (orderID > 0) {
 
-                        MOrder pOrder = (MOrder) inOut.getC_Order();
+                        MOrder pOrder = new MOrder(expenseReport.getCtx(), orderID, expenseReport.get_TrxName());
 
-                        String sql = "select c_order_id" +
-                                " from c_order" +
-                                " where link_order_id = " + pOrder.get_ID() +
-                                " and issotrx = 'Y'" +
-                                " and docstatus in ('CO','CL')";
+                        sql = "select c_order_id from c_order where link_order_id = " + orderID;
 
-                        int orderID = DB.getSQLValueEx(inOut.get_TrxName(), sql);
+                        orderID = DB.getSQLValueEx(inOut.get_TrxName(), sql);
 
-                        if (orderID > 0){
+                        if(orderID > 0){
 
                             createDeliveryFromSO(inOut, orderID, inOut.get_ValueAsInt("S_TimeExpense_ID"));
 
-                        } else throw new AdempiereException("No se obtuvo orden de venta, completa o cerrada, para la orden de de compra Nro. " + pOrder.getDocumentNo());
-                    }
+                        } else throw new AdempiereException("No se obtuvo orden de venta, completa o cerrada, para la orden de compra Nro. " + pOrder.getDocumentNo());
+
+                    } else throw new AdempiereException("No se obtuvo orden de compra, completa o cerrada, para la orden de venta Nro. " + sOrder.getDocumentNo());
+
                 }
             }//Fin #12701.
 		}
