@@ -793,7 +793,10 @@ public class AgencyValidator implements ModelValidator
 
                         MOrder pOrder = new MOrder(expenseReport.getCtx(), orderID, expenseReport.get_TrxName());
 
-                        sql = "select c_order_id from c_order where link_order_id = " + orderID;
+                        sql = "select c_order_id" +
+                                " from c_order" +
+                                " where link_order_id = " + orderID +
+                                " and docstatus in ('CO','CL')";
 
                         orderID = DB.getSQLValueEx(inOut.get_TrxName(), sql);
 
