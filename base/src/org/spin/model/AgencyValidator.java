@@ -661,9 +661,13 @@ public class AgencyValidator implements ModelValidator
 						}
 					}
 					//	Generate from orders
-					orders.entrySet().stream().forEach(orderSet -> {
-						generateInOutFromOrder(expenseReport, orderSet.getKey(), orderSet.getValue());
-					});
+					//Openup. Nicolas Sarlabos. 07/01/2020. #13498.
+					if(!expenseReport.get_ValueAsBoolean("IsFromReturn")){
+						orders.entrySet().stream().forEach(orderSet -> {
+							generateInOutFromOrder(expenseReport, orderSet.getKey(), orderSet.getValue());
+						});
+					}//Fin #13498.
+
 				}
 			} else if(po instanceof MInvoice) {
 				MInvoice invoice = (MInvoice) po;
