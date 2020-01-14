@@ -343,6 +343,24 @@ public class ImportOrder extends ImportOrderAbstract
 			  + " AND I_IsImported<>'Y'").append (clientCheck);
 		no = DB.executeUpdate(sql.toString(), get_TrxName());
 		log.fine("Set BP Location from BP=" + no);
+		//	Set Location from DropShip Partner
+		sql = new StringBuffer ("UPDATE I_Order o "
+				+ "SET Dropship_Location_ID=(SELECT MAX(C_BPartner_Location_ID) FROM C_BPartner_Location l"
+				+ " WHERE l.C_BPartner_ID=o.DropShip_BPartner_ID AND o.AD_Client_ID=l.AD_Client_ID"
+				+ " AND ((l.IsShipTo='Y' AND o.IsSOTrx='Y') OR o.IsSOTrx='N')"
+				+ ") "
+				+ "WHERE DropShip_BPartner_ID IS NOT NULL AND DropShip_Location_ID IS NULL"
+				+ " AND I_IsImported<>'Y'").append (clientCheck);
+		no = DB.executeUpdate(sql.toString(), get_TrxName());
+		log.fine("Set BP Location from DropShip BP=" + no);
+		//
+		sql = new StringBuffer ("UPDATE I_Order "
+				+ "SET I_IsImported='E', I_ErrorMsg=I_ErrorMsg||'ERR=No DropShip BP Location, ' "
+				+ "WHERE DropShip_BPartner_ID IS NOT NULL AND DropShip_Location_ID IS NULL"
+				+ " AND I_IsImported<>'Y'").append (clientCheck);
+		no = DB.executeUpdate(sql.toString(), get_TrxName());
+		if (no != 0)
+			log.warning ("No BP Location=" + no);
 		//
 		sql = new StringBuffer ("UPDATE I_Order "
 			  + "SET I_IsImported='E', I_ErrorMsg=I_ErrorMsg||'ERR=No BP Location, ' "
@@ -711,6 +729,21 @@ public class ImportOrder extends ImportOrderAbstract
 					if (imp.getC_OrderSource() != null)
 						order.setC_OrderSource_ID(imp.getC_OrderSource_ID());
 					//
+
+					if (imp.get_ValueAsInt("S_Contract_ID") != 0)
+						order.set_ValueOfColumn("S_Contract_ID", imp.get_ValueAsInt("S_Contract_ID"));
+					if(imp.get_ValueAsBoolean("IsDropShip"))
+						order.setIsDropShip(imp.get_ValueAsBoolean("IsDropShip"));
+					if(imp.get_ValueAsInt("DropShip_BPartner_ID") != 0)
+						order.setDropShip_BPartner_ID(imp.get_ValueAsInt("DropShip_BPartner_ID"));
+					if(imp.get_ValueAsInt("DropShip_Location_ID") != 0)
+						order.setDropShip_Location_ID(imp.get_ValueAsInt("DropShip_Location_ID"));
+					if(order.get_ValueAsString("POReference") != null)
+						order.setPOReference(order.get_ValueAsString("POReference"));
+					if(imp.get_ValueAsInt("Link_Order_ID") != 0)
+						order.setLink_Order_ID(imp.get_ValueAsInt("Link_Order_ID"));
+
+
 					order.saveEx();
 					noInsert++;
 					lineNo = 10;
