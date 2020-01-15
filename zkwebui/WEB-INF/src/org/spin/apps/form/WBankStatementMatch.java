@@ -454,7 +454,7 @@ public class WBankStatementMatch extends BankStatementMatchController
 	 */
 	private void refresh() {
 		clear();
-		setIsAvailableForSave(false);
+		setIsAvailableForSave(true);
 		getParameters();
 		String message = validateParameters();
 		if(Util.isEmpty(message)) {
@@ -558,7 +558,7 @@ public class WBankStatementMatch extends BankStatementMatchController
 	 */
 	private void loadMatchedPaymentsFromMatch() {
 		Vector<Vector<Object>> matchedPayments = getMatchedPayments();
-		setIsAvailableForSave(matchedPayments != null && !matchedPayments.isEmpty());
+		setIsAvailableForSave(true);
 		fillMatchedPayments(matchedPayments);
 	}
 	

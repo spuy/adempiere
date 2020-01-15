@@ -924,6 +924,7 @@ public class BankStatementMatchController {
 						lineNo.addAndGet(10);
 					} else {
 						MBankStatementLine currentStatementLine = new MBankStatementLine(Env.getCtx(), currentBankStatementImport.getC_BankStatementLine_ID(), trxName);
+						currentStatementLine.setC_BankStatement_ID(bankStatement.getC_BankStatement_ID());
 						if(currentBankStatementImport.getC_Payment_ID() == 0) {
 							currentStatementLine.setC_Payment_ID(-1);
 						} else {
