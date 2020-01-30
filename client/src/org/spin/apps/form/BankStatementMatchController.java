@@ -899,7 +899,7 @@ public class BankStatementMatchController {
 	public String saveData(int m_WindowNo, String trxName) {
 		AtomicInteger processed = new AtomicInteger();
 		AtomicInteger lineNo = new AtomicInteger(10);
-		int defaultChargeId = DB.getSQLValue(null, "SELECT MAX(C_Charge_ID) FROM C_Charge WHERE AD_Client_ID = ?", Env.getAD_Client_ID(Env.getCtx()));
+		int defaultChargeId = DB.getSQLValue(trxName, "SELECT MAX(C_Charge_ID) FROM C_Charge WHERE AD_Client_ID = ?", Env.getAD_Client_ID(Env.getCtx()));
 		if(defaultChargeId <= 0) {
 			return Msg.parseTranslation(Env.getCtx(), "@C_Charge_ID@ @NotFound@");
 		}
@@ -961,6 +961,7 @@ public class BankStatementMatchController {
 		}
 		//	
 		MBankStatementLine lineToImport = new MBankStatementLine(bankStatement, toBeImport, lineNo);
+		lineToImport.set_TrxName(toBeImport.get_TrxName());
 		lineToImport.saveEx();
 		toBeImport.setC_BankStatement_ID(bankStatement.getC_BankStatement_ID());
 		toBeImport.setC_BankStatementLine_ID(lineToImport.getC_BankStatementLine_ID());
