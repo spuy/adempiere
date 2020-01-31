@@ -500,7 +500,7 @@ public class AgencyValidator implements ModelValidator
 							throw new AdempiereException(Msg.getMsg(Env.getCtx(), "AttachmentNotFound"));
 						}
 						//	Validate project reference
-						if(order.getC_Project_ID() <= 0) {
+						if(!documentType.get_ValueAsBoolean("NoProjectRequired") && order.getC_Project_ID() <= 0) {
 							throw new AdempiereException(Msg.parseTranslation(Env.getCtx(), "@C_Project_ID@ @NotFound@"));
 						}
 					}
