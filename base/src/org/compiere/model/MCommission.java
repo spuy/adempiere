@@ -98,6 +98,24 @@ public class MCommission extends X_C_Commission
 		return retValue;
 	}	//	getLines
 
+	public MCommissionLine[] getLines(String where)
+	{
+
+		String whereClause = "IsActive='Y' AND C_Commission_ID=?";
+
+		if(where != null)
+			whereClause = whereClause + where;
+
+		List<MCommissionLine> list  = new Query(getCtx(), I_C_CommissionLine.Table_Name, whereClause, get_TrxName())
+				.setParameters(getC_Commission_ID())
+				.setOrderBy("Line")
+				.list();
+		//	Convert
+		MCommissionLine[] retValue = new MCommissionLine[list.size()];
+		list.toArray(retValue);
+		return retValue;
+	}
+
 	/**
 	 * 	Set Date Last Run
 	 *	@param DateLastRun date

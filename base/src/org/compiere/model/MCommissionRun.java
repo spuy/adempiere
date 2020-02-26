@@ -1308,14 +1308,20 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 	 * @return
 	 */
 	private String processCommissionLine(MBPartner salesRep, MCommission commission, boolean isPercentage, BigDecimal amtMultiplier) {
-		//	
-		List<MCommissionLine> commissionLineList = Arrays.asList(commission.getLines());
+		//
 		long count = 0;
+        List<MCommissionLine> commissionLineList = null;
 		MOrder order = null;
 		//	Validate for orders
 		if(get_ValueAsInt("C_Order_ID") > 0) {
 			order = new MOrder(getCtx(), get_ValueAsInt("C_Order_ID"), get_TrxName());
 		}
+
+		if(order != null && order.get_ValueAsInt("S_Contract_ID") > 0){
+            commissionLineList = Arrays.asList(commission.getLines(" AND S_Contract_ID = " + order.get_ValueAsInt("S_Contract_ID")));
+        } else commissionLineList = Arrays.asList(commission.getLines());
+
+
 		//	Validate order
 		if(order != null
 				&& !order.isSOTrx()) {
