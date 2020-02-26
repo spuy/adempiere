@@ -283,35 +283,36 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 		//	Set Start and End
 		setStartEndDate(frequencyType);
 		log.info("StartDate = " + getStartDate() + ", EndDate = " + getEndDate());
-		
-		//	Iterate for each commission definition and  Sales Representative
-		for(MCommission commission : commissionList) {
-			if(get_ValueAsInt("S_Contract_ID") > 0) {
-				//	Add filters for lines
-				addFilterValues("S_Contract_ID", get_ValueAsInt("S_Contract_ID"));
-				List<X_C_CommissionSalesRep> commissionSalesRepList = getCommissionSplitFromSalesRepList(commission);
-				if(commissionSalesRepList != null
-						&& commissionSalesRepList.size() > 0) {
-					for(X_C_CommissionSalesRep commissionSalesRep : commissionSalesRepList) {
-						if(commissionSalesRep.get_ValueAsBoolean("IsExcludeOfCommission")) {
-							continue;
-						}
-						MBPartner salesRep = MBPartner.get(getCtx(), commissionSalesRep.getC_BPartner_ID());
-						processCommissionLine(salesRep, commission, commissionSalesRep.get_ValueAsBoolean("IsPercentage"), (BigDecimal)commissionSalesRep.get_Value("AmtMultiplier"));
-					}
-				} else {
-					List<MBPartner> partiesList = getCommissionSplitFromSalesRepListAsLine(commission);
-					if(partiesList != null
-							&& partiesList.size() > 0) {
-						for(MBPartner party: partiesList) {
-							processCommissionLine(party, commission);
-						}
-					}
-				}
-			} else if(get_ValueAsInt("C_Order_ID") > 0) {
-				MOrder order = new MOrder(getCtx(), get_ValueAsInt("C_Order_ID"), get_TrxName());
-				processCommissionLine(MBPartner.get(getCtx(), order.getC_BPartner_ID()), commission);
-			} else if(get_ValueAsInt("C_Invoice_ID") > 0) {
+
+        //	Iterate for each commission definition and  Sales Representative
+        for (MCommission commission : commissionList) {
+            if (get_ValueAsInt("S_Contract_ID") > 0) {
+                //	Add filters for lines
+                addFilterValues("S_Contract_ID", get_ValueAsInt("S_Contract_ID"));
+                List<X_C_CommissionSalesRep> commissionSalesRepList = getCommissionSplitFromSalesRepList(commission);
+                if (commissionSalesRepList != null
+                        && commissionSalesRepList.size() > 0) {
+                    for (X_C_CommissionSalesRep commissionSalesRep : commissionSalesRepList) {
+                        if (commissionSalesRep.get_ValueAsBoolean("IsExcludeOfCommission")) {
+                            continue;
+                        }
+                        MBPartner salesRep = MBPartner.get(getCtx(), commissionSalesRep.getC_BPartner_ID());
+                        processCommissionLine(salesRep, commission, commissionSalesRep.get_ValueAsBoolean("IsPercentage"), (BigDecimal) commissionSalesRep.get_Value("AmtMultiplier"));
+                    }
+                } else {
+                    List<MBPartner> partiesList = getCommissionSplitFromSalesRepListAsLine(commission);
+                    if (partiesList != null
+                            && partiesList.size() > 0) {
+                        for (MBPartner party : partiesList) {
+                            processCommissionLine(party, commission);
+                        }
+                    }
+                }
+
+            } else if (get_ValueAsInt("C_Order_ID") > 0) {
+                MOrder order = new MOrder(getCtx(), get_ValueAsInt("C_Order_ID"), get_TrxName());
+                processCommissionLine(MBPartner.get(getCtx(), order.getC_BPartner_ID()), commission);
+            } else if (get_ValueAsInt("C_Invoice_ID") > 0) {
 				MInvoice invoice = new MInvoice(getCtx(), get_ValueAsInt("C_Invoice_ID"), get_TrxName());
 				processCommissionLine(MBPartner.get(getCtx(), invoice.getC_BPartner_ID()), commission);
 			} else {
@@ -1344,6 +1345,7 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 					processLine(salesRep, commission, commissionLinesToProcess, commissionLine, isPercentage, amtMultiplier);
 				});
 			} else if(get_ValueAsInt("C_Invoice_ID") > 0) {
+
 				MInvoice invoice = new MInvoice(getCtx(), get_ValueAsInt("C_Invoice_ID"), get_TrxName());
 				if(!invoice.isSOTrx()) {
 					List<MCommissionLine> commissionLinesToProcess = commissionLineList
@@ -1354,15 +1356,16 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 						processLine(salesRep, commission, commissionLinesToProcess, commissionLine, isPercentage, amtMultiplier);
 					});
 				}
-			} else if(get_ValueAsInt("S_Contract_ID") > 0
+			} else if (get_ValueAsInt("S_Contract_ID") > 0
 					&& amtMultiplier == null) {
+
 				List<MCommissionLine> commissionLinesFromProjectToProcess = commissionLineList
 						.stream()
 						.filter(commissionLine -> commissionLine.get_ValueAsInt("SplitBPartner_ID") == salesRep.getC_BPartner_ID())
 						.filter(commissionLine -> commissionLine.get_ValueAsInt("S_Contract_ID") == get_ValueAsInt("S_Contract_ID") || commissionLine.get_ValueAsInt("S_Contract_ID") == 0)
 						.filter(commissionLine -> commissionLine.get_ValueAsInt("C_Project_ID") == get_ValueAsInt("C_Project_ID"))
 						.collect(Collectors.toList());
-				if(!commissionLinesFromProjectToProcess.isEmpty()) {
+				if (!commissionLinesFromProjectToProcess.isEmpty()) {
 					commissionLinesFromProjectToProcess.forEach(commissionLine -> {
 						processLine(salesRep, commission, commissionLinesFromProjectToProcess, commissionLine, isPercentage, amtMultiplier);
 					});
@@ -1376,6 +1379,21 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 						processLine(salesRep, commission, commissionLinesToProcess, commissionLine, isPercentage, amtMultiplier);
 					});
 				}
+
+			//Openup. Nicolas Sarlabos. 26/02/2020. #13727.
+			} else if (order != null && order.isSOTrx()) {
+
+				int contract_ID = order.get_ValueAsInt("S_Contract_ID");
+
+				List<MCommissionLine> commissionLinesToProcess = commissionLineList
+						.stream()
+						.filter(commissionLine -> commissionLine.get_ValueAsInt("S_Contract_ID") == contract_ID)
+						.collect(Collectors.toList());
+				commissionLinesToProcess.forEach(commissionLine -> {
+					processLine(salesRep, commission, commissionLinesToProcess, commissionLine, isPercentage, amtMultiplier);
+				});
+				//Fin #13727.
+
 			} else {
 				//	For all
 				List<MCommissionLine> commissionLinesForOrders = commissionLineList.stream()
