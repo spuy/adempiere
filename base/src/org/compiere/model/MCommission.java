@@ -98,6 +98,10 @@ public class MCommission extends X_C_Commission
 		return retValue;
 	}	//	getLines
 
+	/** Openup. Nicolas Sarlabos. 26/02/2020. #13727.
+	 * 	Get Lines with Where condition.
+	 *	@return array of lines
+	 */
 	public MCommissionLine[] getLines(String where)
 	{
 

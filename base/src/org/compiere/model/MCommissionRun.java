@@ -1317,10 +1317,11 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 			order = new MOrder(getCtx(), get_ValueAsInt("C_Order_ID"), get_TrxName());
 		}
 
+        //Openup. Nicolas Sarlabos. 26/02/2020. #13727.
 		if(order != null && order.get_ValueAsInt("S_Contract_ID") > 0){
             commissionLineList = Arrays.asList(commission.getLines(" AND S_Contract_ID = " + order.get_ValueAsInt("S_Contract_ID")));
         } else commissionLineList = Arrays.asList(commission.getLines());
-
+		//Fin #13727.
 
 		//	Validate order
 		if(order != null
