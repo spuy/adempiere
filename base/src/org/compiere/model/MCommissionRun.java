@@ -1318,7 +1318,7 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 		}
 
         //Openup. Nicolas Sarlabos. 26/02/2020. #13727.
-		if(order != null && order.get_ValueAsInt("S_Contract_ID") > 0){
+		if(order != null && order.isSOTrx() && order.get_ValueAsInt("S_Contract_ID") > 0){
             commissionLineList = Arrays.asList(commission.getLines(" AND S_Contract_ID = " + order.get_ValueAsInt("S_Contract_ID")));
         } else commissionLineList = Arrays.asList(commission.getLines());
 		//Fin #13727.
