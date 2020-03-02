@@ -1390,11 +1390,11 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 			//Openup. Nicolas Sarlabos. 26/02/2020. #13727.
 			} else if (order != null && order.isSOTrx()) {
 
-				int contract_ID = order.get_ValueAsInt("S_Contract_ID");
+				//int contract_ID = order.get_ValueAsInt("S_Contract_ID");
 
 				List<MCommissionLine> commissionLinesToProcess = commissionLineList
 						.stream()
-						.filter(commissionLine -> commissionLine.get_ValueAsInt("S_Contract_ID") == contract_ID)
+						//.filter(commissionLine -> commissionLine.get_ValueAsInt("S_Contract_ID") == contract_ID)
 						.collect(Collectors.toList());
 				commissionLinesToProcess.forEach(commissionLine -> {
 					processLine(salesRep, commission, commissionLinesToProcess, commissionLine, isPercentage, amtMultiplier);
