@@ -455,7 +455,7 @@ public class AgencyValidator implements ModelValidator
 						.setParameters(mCommissionRun.get_ID())
 						.first();
 				if (commissionMOrder != null && commissionMOrder.get_ID() > 0) {
-					reverseCommissionOrder(commissionMOrder, commissionMOrder.getGrandTotal().negate());
+					reverseCommissionOrder(commissionMOrder, commissionMOrder.getTotalLines().negate());
 				}
 				if (!mCommissionRun.processIt(DocAction.ACTION_Close)) {
 					log.warning("MCommissionRun complete - failed: " + mCommissionRun);
@@ -679,7 +679,7 @@ public class AgencyValidator implements ModelValidator
 							}
 						}
 					}
-				} else if (timing == TIMING_BEFORE_CLOSE) {
+				} else if (timing == TIMING_AFTER_CLOSE) {
 					updateCommissionRunForOrder(order);
 				}
 			} else if(po instanceof MCommissionRun) {
