@@ -432,7 +432,7 @@ public class AgencyValidator implements ModelValidator
 				});
 		}
 
-		public void updateCommissionRunForOrder(MOrder mOrder) {
+		public static void updateCommissionRunForOrder(MOrder mOrder) {
 			MCommissionType mCommissionType = null;
 			try {
 				mCommissionType = new MCommissionType(mOrder.getCtx(), ((MDocType) mOrder.getC_DocTypeTarget()).get_ValueAsInt("C_CommissionType_ID"), mOrder.get_TrxName());
@@ -444,7 +444,7 @@ public class AgencyValidator implements ModelValidator
 			}
 		}
 
-		public void cancelingPreviousOrderCommissionRun(MOrder mOrder) {
+		public static void cancelingPreviousOrderCommissionRun(MOrder mOrder) {
 			String whereClause = "C_Order_ID=? AND C_Invoice_ID IS NULL AND " + I_C_CommissionRun.COLUMNNAME_DocStatus + "=?";
 			List<MCommissionRun> mCommissionRuns = new Query(mOrder.getCtx(), I_C_CommissionRun.Table_Name, whereClause, mOrder.get_TrxName())
 					.setParameters(mOrder.get_ID(), DocAction.STATUS_Completed)
@@ -458,7 +458,7 @@ public class AgencyValidator implements ModelValidator
 					reverseCommissionOrder(commissionMOrder, commissionMOrder.getTotalLines().negate());
 				}
 				if (!mCommissionRun.processIt(DocAction.ACTION_Close)) {
-					log.warning("MCommissionRun complete - failed: " + mCommissionRun);
+//					log.warning("MCommissionRun complete - failed: " + mCommissionRun);
 				}
 				mCommissionRun.saveEx();
 			}
@@ -467,7 +467,7 @@ public class AgencyValidator implements ModelValidator
 
 		}
 
-		public void reverseCommissionOrder(MOrder mOrder, BigDecimal reverseAmount) {
+		public static void reverseCommissionOrder(MOrder mOrder, BigDecimal reverseAmount) {
 			Timestamp currentTimestamp =  new Timestamp(System.currentTimeMillis());
 			Calendar cal = Calendar.getInstance();
 			cal.setTime(currentTimestamp);
@@ -1207,7 +1207,7 @@ public class AgencyValidator implements ModelValidator
 		 * @param order
 		 * @param
 		 */
-		private void createCommissionForOrder(MOrder order, int commissionTypeId, boolean splitDocuments) {
+		private static void createCommissionForOrder(MOrder order, int commissionTypeId, boolean splitDocuments) {
 			if(MOrgInfo.get(order.getCtx(), order.getAD_Org_ID(), order.get_TrxName()).get_ValueAsBoolean("IsExcludeOfCommission")) {
 				return;
 			}
@@ -1340,7 +1340,7 @@ public class AgencyValidator implements ModelValidator
 		 * Remove Line From Commission
 		 * @param order
 		 */
-		private void removeLineFromCommission(MOrder order, int commissionTypeId) {
+		private static void removeLineFromCommission(MOrder order, int commissionTypeId) {
 			String whereClause = " AND EXISTS(SELECT 1 FROM C_Commission c WHERE c.C_CommissionType_ID = " + commissionTypeId 
 					+ " AND c.C_Charge_ID = C_OrderLine.C_Charge_ID)";
 			for(MOrderLine line : order.getLines(whereClause, "")) {
