@@ -16,8 +16,10 @@
 package org.spin.model;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -430,6 +432,98 @@ public class AgencyValidator implements ModelValidator
 				});
 		}
 
+		public static void updateCommissionRunForOrder(MOrder mOrder) {
+			MCommissionType mCommissionType = null;
+			try {
+				mCommissionType = new MCommissionType(mOrder.getCtx(), ((MDocType) mOrder.getC_DocTypeTarget()).get_ValueAsInt("C_CommissionType_ID"), mOrder.get_TrxName());
+			} catch (Exception ignored) {}
+
+			if (mCommissionType != null && mCommissionType.get_ID() > 0) {
+				cancelingPreviousOrderCommissionRun(mOrder);
+				createCommissionForOrder(mOrder, mCommissionType.get_ID(), true);
+			}
+		}
+
+		public static void cancelingPreviousOrderCommissionRun(MOrder mOrder) {
+			String whereClause = "C_Order_ID=? AND C_Invoice_ID IS NULL AND " + I_C_CommissionRun.COLUMNNAME_DocStatus + "=?";
+			List<MCommissionRun> mCommissionRuns = new Query(mOrder.getCtx(), I_C_CommissionRun.Table_Name, whereClause, mOrder.get_TrxName())
+					.setParameters(mOrder.get_ID(), DocAction.STATUS_Completed)
+					.list();
+			for (MCommissionRun mCommissionRun : mCommissionRuns) {
+				String whereClause2 = "C_CommissionRun_ID=? AND " + I_C_Order.COLUMNNAME_GrandTotal + ">0";
+				MOrder commissionMOrder = new Query(mOrder.getCtx(), I_C_Order.Table_Name, whereClause2, mOrder.get_TrxName())
+						.setParameters(mCommissionRun.get_ID())
+						.first();
+				if (commissionMOrder != null && commissionMOrder.get_ID() > 0) {
+					reverseCommissionOrder(commissionMOrder, commissionMOrder.getTotalLines().negate());
+				}
+				if (!mCommissionRun.processIt(DocAction.ACTION_Close)) {
+//					log.warning("MCommissionRun complete - failed: " + mCommissionRun);
+				}
+				mCommissionRun.saveEx();
+			}
+
+
+
+		}
+
+		public static void reverseCommissionOrder(MOrder mOrder, BigDecimal reverseAmount) {
+			Timestamp currentTimestamp =  new Timestamp(System.currentTimeMillis());
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(currentTimestamp);
+			cal.set(Calendar.HOUR_OF_DAY, 0);
+			cal.set(Calendar.MINUTE, 0);
+			cal.set(Calendar.SECOND, 0);
+			cal.set(Calendar.MILLISECOND, 0);
+			currentTimestamp = new Timestamp(cal.getTimeInMillis());
+
+
+			MOrder reverseOrder = new MOrder(mOrder.getCtx(), 0, mOrder.get_TrxName());
+			PO.copyValues(mOrder, reverseOrder);
+			reverseOrder.setDocumentNo(null);
+			reverseOrder.setDateOrdered(currentTimestamp);
+			reverseOrder.setDatePromised(currentTimestamp);
+			reverseOrder.setPOReference(mOrder.getDocumentNo());
+			reverseOrder.addDescription(Msg.parseTranslation(mOrder.getCtx(), "@Generated@ [@C_Order_ID@ " + mOrder.getDocumentNo()) + "]");
+			reverseOrder.setDocStatus(MOrder.DOCSTATUS_Drafted);
+			reverseOrder.setDocAction(MOrder.DOCACTION_Complete);
+			reverseOrder.setTotalLines(Env.ZERO);
+			reverseOrder.setGrandTotal(Env.ZERO);
+			reverseOrder.setIsSOTrx(mOrder.isSOTrx());
+			reverseOrder.setRef_Order_ID(-1);
+			reverseOrder.setIsDropShip(false);
+			reverseOrder.setDropShip_BPartner_ID(0);
+			reverseOrder.setDropShip_Location_ID(0);
+			reverseOrder.setDropShip_User_ID(0);
+			reverseOrder.set_ValueOfColumn("ConsumptionOrder_ID", null);
+			reverseOrder.set_ValueOfColumn("PreOrder_ID", null);
+			reverseOrder.saveEx();
+			//	Add Line
+			MOrderLine commissionOrderLine = mOrder.getLines(true, null)[0];
+			MOrderLine reverseOrderLine = new MOrderLine(reverseOrder);
+			PO.copyValues(commissionOrderLine, reverseOrderLine);
+			reverseOrderLine.setOrder(reverseOrder);
+			reverseOrderLine.setC_Order_ID(reverseOrder.getC_Order_ID());
+			//	Set from reverse amount
+			if(commissionOrderLine.getQtyOrdered().signum() < 0) {
+				reverseOrderLine.setQty(Env.ONE.negate());
+			} else {
+				reverseOrderLine.setQty(Env.ONE);
+			}
+			//	Set amount
+			reverseOrderLine.setPrice(reverseAmount);
+			reverseOrderLine.setProcessed(true);
+			reverseOrderLine.saveEx();
+			reverseOrder.setDocStatus(MOrder.DOCSTATUS_Closed);
+			reverseOrder.setDocAction(MOrder.DOCACTION_None);
+			reverseOrder.setProcessed(true);
+			reverseOrder.calculateTaxTotal();
+			reverseOrder.saveEx();
+			reverseOrder.processIt(MOrder.ACTION_Post);
+			mOrder.setDocStatus(MOrder.DOCSTATUS_Closed);
+			mOrder.saveEx();
+		}
+
 		@Override
 		public String docValidate (PO po, int timing) {
 			log.info(po.get_TableName() + " Timing: "+timing);
@@ -566,7 +660,7 @@ public class AgencyValidator implements ModelValidator
 							reverseOrder.saveEx();
 						});
 					}
-				} if(timing == TIMING_BEFORE_COMPLETE) {
+				} else if(timing == TIMING_BEFORE_COMPLETE) {
 					//	
 					if(order.isSOTrx()) {
 						for(MOrderLine orderLine : order.getLines()) {
@@ -585,6 +679,8 @@ public class AgencyValidator implements ModelValidator
 							}
 						}
 					}
+				} else if (timing == TIMING_AFTER_CLOSE) {
+					updateCommissionRunForOrder(order);
 				}
 			} else if(po instanceof MCommissionRun) {
 				MCommissionRun commissionRun = (MCommissionRun) po;
@@ -1111,7 +1207,7 @@ public class AgencyValidator implements ModelValidator
 		 * @param order
 		 * @param
 		 */
-		private void createCommissionForOrder(MOrder order, int commissionTypeId, boolean splitDocuments) {
+		private static void createCommissionForOrder(MOrder order, int commissionTypeId, boolean splitDocuments) {
 			if(MOrgInfo.get(order.getCtx(), order.getAD_Org_ID(), order.get_TrxName()).get_ValueAsBoolean("IsExcludeOfCommission")) {
 				return;
 			}
@@ -1244,7 +1340,7 @@ public class AgencyValidator implements ModelValidator
 		 * Remove Line From Commission
 		 * @param order
 		 */
-		private void removeLineFromCommission(MOrder order, int commissionTypeId) {
+		private static void removeLineFromCommission(MOrder order, int commissionTypeId) {
 			String whereClause = " AND EXISTS(SELECT 1 FROM C_Commission c WHERE c.C_CommissionType_ID = " + commissionTypeId 
 					+ " AND c.C_Charge_ID = C_OrderLine.C_Charge_ID)";
 			for(MOrderLine line : order.getLines(whereClause, "")) {
