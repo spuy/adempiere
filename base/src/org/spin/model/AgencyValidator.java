@@ -432,6 +432,12 @@ public class AgencyValidator implements ModelValidator
 				});
 		}
 
+	/**
+	 * Openup Solutions - Redmine #13452 - 02/04/2020
+	 * Cierra cálculos de comisiones anteriores en estado completo sin factura asociada y realiza un nuevo cálculo de comisión con los montos actualies de la orden
+	 * @author Raul Capecce
+	 * @param mOrder
+	 */
 		public static void updateCommissionRunForOrder(MOrder mOrder) {
 			MCommissionType mCommissionType = null;
 			try {
@@ -444,6 +450,13 @@ public class AgencyValidator implements ModelValidator
 			}
 		}
 
+	/**
+	 * Openup Solutions - Redmine #13452 - 02/04/2020
+	 * Cierra los cálculos de comisión asociados a la orden que no tengan factura asociada y estén en estado completo
+	 * Dichos cálculos de comisión los pasa a estado Cerrado
+	 * @author Raul Capecce
+	 * @param mOrder
+	 */
 		public static void cancelingPreviousOrderCommissionRun(MOrder mOrder) {
 			String whereClause = "C_Order_ID=? AND C_Invoice_ID IS NULL AND " + I_C_CommissionRun.COLUMNNAME_DocStatus + "=?";
 			List<MCommissionRun> mCommissionRuns = new Query(mOrder.getCtx(), I_C_CommissionRun.Table_Name, whereClause, mOrder.get_TrxName())
