@@ -480,7 +480,11 @@ public class AgencyValidator implements ModelValidator
 
 		}
 
-		public static void reverseCommissionOrder(MOrder mOrder, BigDecimal reverseAmount) {
+	/**
+	 * Get the current timestamp, date part only
+	 * @return Timestamp, Date part only
+	 */
+	private static Timestamp getCurrentDate() {
 			Timestamp currentTimestamp =  new Timestamp(System.currentTimeMillis());
 			Calendar cal = Calendar.getInstance();
 			cal.setTime(currentTimestamp);
@@ -490,6 +494,11 @@ public class AgencyValidator implements ModelValidator
 			cal.set(Calendar.MILLISECOND, 0);
 			currentTimestamp = new Timestamp(cal.getTimeInMillis());
 
+			return currentTimestamp;
+		}
+
+		public static void reverseCommissionOrder(MOrder mOrder, BigDecimal reverseAmount) {
+			Timestamp currentTimestamp = getCurrentDate();
 
 			MOrder reverseOrder = new MOrder(mOrder.getCtx(), 0, mOrder.get_TrxName());
 			PO.copyValues(mOrder, reverseOrder);
@@ -1232,7 +1241,7 @@ public class AgencyValidator implements ModelValidator
 			.<MCommission>list().forEach(commissionDefinition -> {
 				int documentTypeId = MDocType.getDocType(MDocType.DOCBASETYPE_SalesCommission, order.getAD_Org_ID());
 				MCommissionRun commissionRun = new MCommissionRun(commissionDefinition);
-				commissionRun.setDateDoc(order.getDateOrdered());
+				commissionRun.setDateDoc(getCurrentDate()); // Redmine #13452
 				commissionRun.setC_DocType_ID(documentTypeId);
 				commissionRun.setDescription(Msg.parseTranslation(order.getCtx(), "@Generate@: @C_Order_ID@ - " + order.getDocumentNo()));
 				commissionRun.set_ValueOfColumn("C_Order_ID", order.getC_Order_ID());
@@ -1253,7 +1262,7 @@ public class AgencyValidator implements ModelValidator
 							.process(CommissionOrderCreateAbstract.getProcessId())
 							.withRecordId(I_C_CommissionRun.Table_ID, commissionRun.getC_CommissionRun_ID())
 							.withParameter(CommissionOrderCreateAbstract.ISSOTRX, true)
-							.withParameter(CommissionOrderCreateAbstract.DATEORDERED, order.getDateOrdered())
+							.withParameter(CommissionOrderCreateAbstract.DATEORDERED, commissionRun.getDateDoc()) // Redmine #13452
 							.withParameter(CommissionOrderCreateAbstract.DOCACTION, DocAction.ACTION_Complete)
 							.withParameter(CommissionOrderCreateAbstract.C_BPARTNER_ID, order.getC_BPartner_ID())
 							.withParameter(CommissionOrderCreateAbstract.C_DOCTYPE_ID, commissionDefinition.get_ValueAsInt("C_DocTypeOrder_ID"))
