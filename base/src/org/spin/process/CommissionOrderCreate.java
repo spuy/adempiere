@@ -19,15 +19,7 @@ package org.spin.process;
 
 import java.util.Hashtable;
 
-import org.compiere.model.MBPartner;
-import org.compiere.model.MCommission;
-import org.compiere.model.MCommissionAmt;
-import org.compiere.model.MCommissionRun;
-import org.compiere.model.MCurrency;
-import org.compiere.model.MOrder;
-import org.compiere.model.MOrderLine;
-import org.compiere.model.MPriceList;
-import org.compiere.model.MProduct;
+import org.compiere.model.*;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 
@@ -111,6 +103,27 @@ public class CommissionOrderCreate extends CommissionOrderCreateAbstract {
 		}
 		MBPartner businessPartner = MBPartner.get(getCtx(), bPartnerId);
 		order.setBPartner(businessPartner);
+
+
+		// Openup Solutions - #13739 - Raul Capecce - 09/04/2020
+		// Definición del SDN BillTo en base a relación en C_BP_Relation
+		String billBPartnerWhere = I_C_BP_Relation.COLUMNNAME_C_BPartner_ID + "=? AND " + I_C_BP_Relation.COLUMNNAME_IsBillTo + "='Y'";
+		PO bpRelation = new Query(order.getCtx(), I_C_BP_Relation.Table_Name, billBPartnerWhere, order.get_TrxName())
+				.setParameters(order.getC_BPartner_ID())
+				.setOnlyActiveRecords(true)
+				.first();
+		MBPartner billBPartner = null;
+		if (bpRelation != null) {
+			billBPartner = new MBPartner(order.getCtx(), bpRelation.get_ValueAsInt(I_C_BP_Relation.COLUMNNAME_C_BPartnerRelation_ID), order.get_TrxName());
+		}
+		if (billBPartner != null) {
+			order.setBill_BPartner_ID(billBPartner.get_ID());
+		}
+		// Openup Solutions - #13739 - End
+
+
+
+
 		//	Set default price list
 		int currencyId = commissionRun.get_ValueAsInt("C_Currency_ID");
 		if(currencyId == 0) {
