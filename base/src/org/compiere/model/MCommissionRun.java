@@ -20,14 +20,8 @@ import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -1286,10 +1280,40 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 		}
 		//	Add Where Clause
 		sql.append(" WHERE ").append(sqlWhere);
-		log.fine("Line=" + commissionLine.getLine() + " - " + sql);
+
+		// Evaluating commissionLine.amtMultiplier vs maxPercentage allowed for contract
+		// If is vendor, get the max allowed of the current contract
+		BigDecimal maxAmtMultiplier = null;
+		if (commissionLine.get_ValueAsInt("Vendor_ID") != 0 && get_ValueAsInt("C_Order_ID") > 0) {
+			try {
+				MOrder mOrder = new MOrder(getCtx(), get_ValueAsInt("C_Order_ID"), get_TrxName());
+				if (mOrder.get_ValueAsInt("S_Contract_ID") > 0) {
+					Optional<MCommissionLine> maxCommissionLineForContractVendor = new Query(getCtx(), I_C_CommissionLine.Table_Name, "S_Contract_ID=?", get_TrxName())
+							.setParameters(mOrder.get_ValueAsInt("S_Contract_ID"))
+							.setOnlyActiveRecords(true)
+							.<MCommissionLine>list()
+							.stream().filter(mCommissionLine -> mCommissionLine.getC_Commission().getDocBasisType().equalsIgnoreCase("E"))
+							.findFirst();
+					if (maxCommissionLineForContractVendor.isPresent()) {
+						maxAmtMultiplier = maxCommissionLineForContractVendor.get().getMaxCompliance();
+					}
+				}
+			} catch (Exception ignored) { }
+		}
+
+
+			log.fine("Line=" + commissionLine.getLine() + " - " + sql);
 		//	Get Max Percentage
 		commissionAmt.setPercentage(getAmountPercentage(commission, commissionLine.isPercentageFromPrice(), sqlWhere));
-		commissionAmt.setMaxPercentage(commissionLine.getMaxPercentage());
+
+		// If maxAmtMultiplier is not null, I have a top limit commission amt to set
+		if (maxAmtMultiplier != null) {
+			commissionAmt.setMaxPercentage(maxAmtMultiplier);
+		} else {
+			commissionAmt.setMaxPercentage(commissionLine.getMaxPercentage());
+		}
+
+
 		// Here the actual calculation is performed
 		createDetail(sql.toString(), commission, commissionLine, commissionAmt, commissionType, isPercentage, amtMultiplier);
 		if(commissionAmt.getDetails().length==0)  {				
