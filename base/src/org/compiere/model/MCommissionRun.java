@@ -1295,7 +1295,7 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 							.stream().filter(mCommissionLine -> mCommissionLine.getC_Commission().getDocBasisType().equalsIgnoreCase("E"))
 							.findFirst();
 					if (maxCommissionLineForContractVendor.isPresent()) {
-						maxAmtMultiplier = maxCommissionLineForContractVendor.get().getMaxCompliance();
+						maxAmtMultiplier = maxCommissionLineForContractVendor.get().getMaxPercentage();
 					}
 				}
 			} catch (Exception ignored) { }
