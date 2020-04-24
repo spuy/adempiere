@@ -1288,8 +1288,9 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 			try {
 				MOrder mOrder = new MOrder(getCtx(), get_ValueAsInt("C_Order_ID"), get_TrxName());
 				if (mOrder.get_ValueAsInt("S_Contract_ID") > 0) {
-					Optional<MCommissionLine> maxCommissionLineForContractVendor = new Query(getCtx(), I_C_CommissionLine.Table_Name, "S_Contract_ID=?", get_TrxName())
-							.setParameters(mOrder.get_ValueAsInt("S_Contract_ID"))
+					String wClause = "S_Contract_ID=? AND C_Commission_ID=  ?";
+					Optional<MCommissionLine> maxCommissionLineForContractVendor = new Query(getCtx(), I_C_CommissionLine.Table_Name, wClause, get_TrxName())
+							.setParameters(mOrder.get_ValueAsInt("S_Contract_ID"), commission.get_ID())
 							.setOnlyActiveRecords(true)
 							.<MCommissionLine>list()
 							.stream().filter(mCommissionLine -> mCommissionLine.getC_Commission().getDocBasisType().equalsIgnoreCase("E"))
