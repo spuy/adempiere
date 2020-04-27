@@ -397,8 +397,12 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 			rs = pstmt.executeQuery();
 			while (rs.next()) {
 				String columnName = getColumnName("C_InvoiceLine_ID", commissionType);
-				if(!Util.isEmpty(columnName)) {
-					invoiceLineId = rs.getInt("C_InvoiceLine_ID");
+				if(Util.isEmpty(columnName)) {
+					try {
+						invoiceLineId = rs.getInt("C_InvoiceLine_ID");
+					} catch (Exception ignored) { }
+				} else {
+					invoiceLineId = rs.getInt(columnName);
 				}
 				if(commission.getDocBasisType().equals(MCommission.DOCBASISTYPE_Receipt)
 						&& commission.isTotallyPaid()) {
