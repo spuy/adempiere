@@ -21,6 +21,7 @@ import java.sql.Timestamp;
 import java.util.Iterator;
 import java.util.Properties;
 
+import org.adempiere.exceptions.AdempiereException;
 import org.compiere.util.CCache;
 import org.compiere.util.Env;
 
@@ -97,7 +98,45 @@ public class MPriceList extends X_M_PriceList
 		}
 		return retValue;
 	}	//	getDefault
-	
+
+	public static MPriceList get(Properties ctx, boolean IsSOPriceList, String ISOCurrency, boolean isTaxIncluded) {
+		int AD_Client_ID = Env.getAD_Client_ID(ctx);
+		MCurrency currency = MCurrency.get(ctx, ISOCurrency);
+		// If currency is null, return the default without looking at currency
+		if (currency==null) throw new AdempiereException("@C_Currency_ID@ " + ISOCurrency + " @not.found@");
+
+		int M_Currency_ID = currency.get_ID();
+
+		MPriceList retValue = null;
+		//	Search for it in cache
+		for (MPriceList mPriceList : s_cache.values()) {
+			retValue = mPriceList;
+			if (retValue.isDefault()
+				&& retValue.getAD_Client_ID() == AD_Client_ID
+				&& retValue.isSOPriceList() == IsSOPriceList
+				&& retValue.getC_Currency_ID() == M_Currency_ID
+				&& retValue.get_ValueAsBoolean("IsTaxIncluded") == isTaxIncluded
+			) {
+				return retValue;
+			}
+		}
+
+		//	Get from DB
+		final String whereClause = "AD_Client_ID=? AND IsSOPriceList=? AND C_Currency_ID=? AND IsTaxIncluded=?";
+		retValue = new Query(ctx, Table_Name, whereClause, null)
+			.setParameters(AD_Client_ID, IsSOPriceList ? "Y" : "N", M_Currency_ID, isTaxIncluded ? "Y" : "N")
+			.setOnlyActiveRecords(true)
+			.setOrderBy("M_PriceList_ID")
+			.first();
+
+		//	Return value
+		if (retValue != null)
+		{
+			s_cache.put(retValue.get_ID(), retValue);
+		}
+		return retValue;
+	}
+
 	/**
 	 * Get Default Price List for Client (cached) with given currency
 	 * @param	ctx	context
