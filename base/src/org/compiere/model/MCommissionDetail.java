@@ -200,7 +200,15 @@ public class MCommissionDetail extends X_C_CommissionDetail
 			commissionLine.setIsPercentage(isPercentage);
 			commissionLine.setAmtMultiplier(amtMultiplier);
 		}
-		commissionAmt = commissionAmt.multiply(commissionLine.getAmtMultiplier());
+		// Setting the max percentage between commissionLine.amtMultiplier vs commissionAmt.maxPergentage
+		BigDecimal amtMult = commissionLine.getAmtMultiplier();
+		if (parent.getMaxPercentage() != null && parent.getMaxPercentage().compareTo(Env.ZERO) > 0) {
+			BigDecimal maxMultiplier = parent.getMaxPercentage().divide(Env.ONEHUNDRED, MathContext.DECIMAL128);
+			if (amtMult.compareTo(maxMultiplier) > 0) {
+				amtMult = maxMultiplier;
+			}
+		}
+		commissionAmt = commissionAmt.multiply(amtMult);
 		//	Scale
 		if (commissionAmt.scale() > stdPrecision) {
 			commissionAmt = commissionAmt.setScale(stdPrecision, BigDecimal.ROUND_HALF_UP);

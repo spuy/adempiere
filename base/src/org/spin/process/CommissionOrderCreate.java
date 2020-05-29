@@ -130,7 +130,12 @@ public class CommissionOrderCreate extends CommissionOrderCreateAbstract {
 			currencyId = commissionDefinition.getC_Currency_ID();
 		}
 		MCurrency currency = MCurrency.get(getCtx(), currencyId);
-		MPriceList defaultPriceList = MPriceList.getDefault(getCtx(), isSOTrx(), currency.getISO_Code());
+		MPriceList defaultPriceList = null;
+		if (commissionDefinition.get_ValueAsBoolean("IsTaxIncluded")) {
+			defaultPriceList = MPriceList.get(getCtx(), isSOTrx(), currency.getISO_Code(), true);
+		} else {
+			defaultPriceList = MPriceList.getDefault(getCtx(), isSOTrx(), currency.getISO_Code());
+		}
 		if(defaultPriceList != null) {
 			order.setM_PriceList_ID(defaultPriceList.getM_PriceList_ID());
 		} else {
