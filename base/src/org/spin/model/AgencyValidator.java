@@ -1148,6 +1148,7 @@ public class AgencyValidator implements ModelValidator
 						reverseOrder.setDropShip_User_ID(0);
 						reverseOrder.set_ValueOfColumn("ConsumptionOrder_ID", sourceOrder.getC_Order_ID());
 						reverseOrder.set_ValueOfColumn("PreOrder_ID", preOrder.getC_Order_ID());
+						reverseOrder.set_ValueOfColumn("IsAllowToInvoice", false);//Openup. Nicolas Sarlabos. 29/05/2020. #14134.
 						reverseOrder.saveEx();
 						//	Add Line
 						MOrderLine preOrderLine = preOrder.getLines(true, null)[0];
