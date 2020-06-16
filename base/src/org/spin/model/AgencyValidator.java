@@ -498,13 +498,13 @@ public class AgencyValidator implements ModelValidator
 		}
 
 		public static void reverseCommissionOrder(MOrder mOrder, BigDecimal reverseAmount) {
-			Timestamp dateOrdered = mOrder.getDateOrdered();
+			Timestamp currentTimestamp = getCurrentDate();
 
 			MOrder reverseOrder = new MOrder(mOrder.getCtx(), 0, mOrder.get_TrxName());
 			PO.copyValues(mOrder, reverseOrder);
 			reverseOrder.setDocumentNo(null);
-			reverseOrder.setDateOrdered(dateOrdered);
-			reverseOrder.setDatePromised(dateOrdered);
+			reverseOrder.setDateOrdered(currentTimestamp);
+			reverseOrder.setDatePromised(currentTimestamp);
 			reverseOrder.setPOReference(mOrder.getDocumentNo());
 			reverseOrder.addDescription(Msg.parseTranslation(mOrder.getCtx(), "@Generated@ [@C_Order_ID@ " + mOrder.getDocumentNo()) + "]");
 			reverseOrder.setDocStatus(MOrder.DOCSTATUS_Drafted);
@@ -1242,7 +1242,7 @@ public class AgencyValidator implements ModelValidator
 			.<MCommission>list().forEach(commissionDefinition -> {
 				int documentTypeId = MDocType.getDocType(MDocType.DOCBASETYPE_SalesCommission, order.getAD_Org_ID());
 				MCommissionRun commissionRun = new MCommissionRun(commissionDefinition);
-				commissionRun.setDateDoc(order.getDateOrdered()); // Redmine #13452
+				commissionRun.setDateDoc(getCurrentDate()); // Redmine #13452
 				commissionRun.setC_DocType_ID(documentTypeId);
 				commissionRun.setDescription(Msg.parseTranslation(order.getCtx(), "@Generate@: @C_Order_ID@ - " + order.getDocumentNo()));
 				commissionRun.set_ValueOfColumn("C_Order_ID", order.getC_Order_ID());
