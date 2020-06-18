@@ -498,13 +498,13 @@ public class AgencyValidator implements ModelValidator
 		}
 
 		public static void reverseCommissionOrder(MOrder mOrder, BigDecimal reverseAmount) {
-			Timestamp currentTimestamp = getCurrentDate();
+			Timestamp dateOrdered = mOrder.getDateOrdered();
 
 			MOrder reverseOrder = new MOrder(mOrder.getCtx(), 0, mOrder.get_TrxName());
 			PO.copyValues(mOrder, reverseOrder);
 			reverseOrder.setDocumentNo(null);
-			reverseOrder.setDateOrdered(currentTimestamp);
-			reverseOrder.setDatePromised(currentTimestamp);
+			reverseOrder.setDateOrdered(dateOrdered);
+			reverseOrder.setDatePromised(dateOrdered);
 			reverseOrder.setPOReference(mOrder.getDocumentNo());
 			reverseOrder.addDescription(Msg.parseTranslation(mOrder.getCtx(), "@Generated@ [@C_Order_ID@ " + mOrder.getDocumentNo()) + "]");
 			reverseOrder.setDocStatus(MOrder.DOCSTATUS_Drafted);
@@ -1148,6 +1148,7 @@ public class AgencyValidator implements ModelValidator
 						reverseOrder.setDropShip_User_ID(0);
 						reverseOrder.set_ValueOfColumn("ConsumptionOrder_ID", sourceOrder.getC_Order_ID());
 						reverseOrder.set_ValueOfColumn("PreOrder_ID", preOrder.getC_Order_ID());
+						reverseOrder.set_ValueOfColumn("IsAllowToInvoice", false);//Openup. Nicolas Sarlabos. 29/05/2020. #14134.
 						reverseOrder.saveEx();
 						//	Add Line
 						MOrderLine preOrderLine = preOrder.getLines(true, null)[0];
@@ -1241,7 +1242,7 @@ public class AgencyValidator implements ModelValidator
 			.<MCommission>list().forEach(commissionDefinition -> {
 				int documentTypeId = MDocType.getDocType(MDocType.DOCBASETYPE_SalesCommission, order.getAD_Org_ID());
 				MCommissionRun commissionRun = new MCommissionRun(commissionDefinition);
-				commissionRun.setDateDoc(getCurrentDate()); // Redmine #13452
+				commissionRun.setDateDoc(order.getDateOrdered()); // Redmine #13452
 				commissionRun.setC_DocType_ID(documentTypeId);
 				commissionRun.setDescription(Msg.parseTranslation(order.getCtx(), "@Generate@: @C_Order_ID@ - " + order.getDocumentNo()));
 				commissionRun.set_ValueOfColumn("C_Order_ID", order.getC_Order_ID());

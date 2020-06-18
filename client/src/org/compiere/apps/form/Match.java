@@ -445,6 +445,12 @@ public class Match
 				match.saveEx();
 				if (match.save()) {
 					success = true;
+
+					//Openup. Nicolas Sarlabos. 03/06/2020. #13433.
+					String error = DocumentEngine.postImmediate(match.getCtx(), match.getAD_Client_ID(), match.get_Table_ID(), match.getM_MatchInv_ID(), true, match.get_TrxName());
+					if(error != null)
+						log.log(Level.SEVERE, error);
+					//Fin #13433.
 				}
 				else
 					log.log(Level.SEVERE, "Inv Match not created: " + match);
