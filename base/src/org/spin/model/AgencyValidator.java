@@ -1013,7 +1013,8 @@ public class AgencyValidator implements ModelValidator
 		 */
 		private void reversePreviousCommissionOrders(MInvoice sourceInvoice, BigDecimal reverseAmount) {
 			new Query(sourceInvoice.getCtx(), I_C_Order.Table_Name, 
-					"DocStatus = 'CO' "
+					"DocStatus IN ('CO', 'CL') "
+							+ "AND grandTotal > 0 "
 							+ "AND EXISTS(SELECT 1 FROM C_CommissionRun cr "
 							+ "WHERE cr.C_CommissionRun_ID = C_Order.C_CommissionRun_ID "
 							+ "AND cr.C_Invoice_ID IS NULL "
