@@ -117,6 +117,10 @@ public class CreateCommissionFromContract extends CreateCommissionFromContractAb
 				commissionRun.setAD_Org_ID(project.getAD_Org_ID());
 				commissionRun.set_ValueOfColumn(I_S_Contract.COLUMNNAME_S_Contract_ID, contract.getS_Contract_ID());
 				commissionRun.set_ValueOfColumn(I_C_Project.COLUMNNAME_C_Project_ID, project.getC_Project_ID());
+				// Openup Solutions - #14207 - Raul Capecce - Requerido para establecer moneda destino del Calculo de Comision
+				commissionRun.set_ValueOfColumn(I_C_Project.COLUMNNAME_C_Currency_ID, project.getC_Currency_ID());
+				// Openup Solutions - #14207 - End
+
 				//	Set filter value a project
 				commissionRun.addFilterValues(I_S_Contract.COLUMNNAME_S_Contract_ID, contract.getS_Contract_ID());
 				commissionRun.addFilterValues(I_C_Project.COLUMNNAME_C_Project_ID, project.getC_Project_ID());
