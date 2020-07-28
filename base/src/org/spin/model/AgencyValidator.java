@@ -584,6 +584,7 @@ public class AgencyValidator implements ModelValidator
 								if(user1Id > 0) {
 									order.setUser3_ID(user1Id);
 								}
+								order.saveEx();//Openup. Nicolas Sarlabos. 28/07/2020.
 							}
 							//	Set allows to invoice
 							if(commissionRun.get_ValueAsInt("C_Invoice_ID") != 0) {
