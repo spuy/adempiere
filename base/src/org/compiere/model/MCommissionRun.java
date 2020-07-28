@@ -386,7 +386,7 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 		try {
 			pstmt = DB.prepareStatement(sql, get_TrxName());
 			pstmt.setInt(1, getAD_Client_ID());
-			pstmt.setTimestamp(2, getStartDate());
+		pstmt.setTimestamp(2, getStartDate());
 			pstmt.setTimestamp(3, getEndDate());
             if (commission.getDocBasisType().equals(MCommission.DOCBASISTYPE_Receipt)
 					&& commission.isTotallyPaid()){
@@ -1397,13 +1397,14 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 
 				List<MCommissionLine> commissionLinesFromProjectToProcess = commissionLineList
 						.stream()
-						.filter(commissionLine -> commissionLine.get_ValueAsInt("SplitBPartner_ID") == salesRep.getC_BPartner_ID())
+						/* Openup Solutions - #11456 - Raul Capecce - 27/07/2020 - Se puede hacer split a cualquier SDN, no importa si está en el contrato o no */
+						//.filter(commissionLine -> commissionLine.get_ValueAsInt("SplitBPartner_ID") == salesRep.getC_BPartner_ID())
 						.filter(commissionLine -> commissionLine.get_ValueAsInt("S_Contract_ID") == get_ValueAsInt("S_Contract_ID") || commissionLine.get_ValueAsInt("S_Contract_ID") == 0)
 						.filter(commissionLine -> commissionLine.get_ValueAsInt("C_Project_ID") == get_ValueAsInt("C_Project_ID"))
 						.collect(Collectors.toList());
 				if (!commissionLinesFromProjectToProcess.isEmpty()) {
 					commissionLinesFromProjectToProcess.forEach(commissionLine -> {
-						processLine(salesRep, commission, commissionLinesFromProjectToProcess, commissionLine, isPercentage, amtMultiplier);
+						processLine(salesRep, commission, commissionLinesFromProjectToProcess, commissionLine, isPercentage, commissionLine.getAmtMultiplier());
 					});
 				} else {
 					List<MCommissionLine> commissionLinesToProcess = commissionLineList
