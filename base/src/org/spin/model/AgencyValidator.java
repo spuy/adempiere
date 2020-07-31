@@ -1012,13 +1012,14 @@ public class AgencyValidator implements ModelValidator
 		 * @param sourceInvoice
 		 * @param reverseAmount
 		 */
-		private void reversePreviousCommissionOrders(MInvoice sourceInvoice, BigDecimal reverseAmount) {
+		private static void reversePreviousCommissionOrders(MInvoice sourceInvoice, BigDecimal reverseAmount) {
 			new Query(sourceInvoice.getCtx(), I_C_Order.Table_Name, 
 					"DocStatus IN ('CO', 'CL') "
 							+ "AND grandTotal > 0 "
 							+ "AND EXISTS(SELECT 1 FROM C_CommissionRun cr "
 							+ "WHERE cr.C_CommissionRun_ID = C_Order.C_CommissionRun_ID "
 							+ "AND cr.C_Invoice_ID IS NULL "
+							+ "AND cr.docStatus='CO'"
 							+ "AND EXISTS(SELECT 1 FROM C_InvoiceLine il "
 							+ "	INNER JOIN C_OrderLine ol ON(ol.C_OrderLine_ID = il.C_OrderLine_ID) "
 							+ "	WHERE il.C_Invoice_ID = ? "
@@ -1296,7 +1297,7 @@ public class AgencyValidator implements ModelValidator
 		 * @param invoice
 		 * @param
 		 */
-		private void createCommissionForInvoice(MInvoice invoice, int commissionTypeId, boolean splitDocuments) {
+		public static void createCommissionForInvoice(MInvoice invoice, int commissionTypeId, boolean splitDocuments) {
 			if(MOrgInfo.get(invoice.getCtx(), invoice.getAD_Org_ID(), invoice.get_TrxName()).get_ValueAsBoolean("IsExcludeOfCommission")) {
 				return;
 			}
@@ -1377,7 +1378,7 @@ public class AgencyValidator implements ModelValidator
 		 * Remove Line From Commission
 		 * @param invoice
 		 */
-		private void removeLineFromCommission(MInvoice invoice, int commissionTypeId) {
+		private static void removeLineFromCommission(MInvoice invoice, int commissionTypeId) {
 			String whereClause = "EXISTS(SELECT 1 FROM C_Commission c WHERE c.C_CommissionType_ID = " + commissionTypeId 
 					+ " AND c.C_Charge_ID = C_InvoiceLine.C_Charge_ID)";
 			List<MInvoiceLine> invoiceLineList = new Query(invoice.getCtx(), MInvoiceLine.Table_Name, whereClause, invoice.get_TrxName())
