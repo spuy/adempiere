@@ -53,6 +53,10 @@ public class AgencyValidator implements ModelValidator
 	/** Client			*/
 	private int		clientId = -1;
 
+	//Openup. Nicolas Sarlabos. 04/08/2020. #14418.
+	private int DOCTYPE_SO_GROUPM_INVENTARIO_ID = 1000177;
+	private int USER1_GROUPM_INVENTARIO_ID = 1000269;
+	//Fin #14418.
 
 	public void initialize (ModelValidationEngine engine, MClient client) {
 		if (client != null) {	
@@ -333,6 +337,8 @@ public class AgencyValidator implements ModelValidator
 					}
 				} else if(po instanceof MOrderLine) {
 					MOrderLine orderLine = (MOrderLine) po;
+					MOrder order = new MOrder(orderLine.getCtx(), orderLine.getC_Order_ID(), orderLine.get_TrxName());
+					MDocType docType = (MDocType) order.getC_DocTypeTarget();
 					int projectPhaseId = orderLine.getC_ProjectPhase_ID();
 					int projectTaskId = orderLine.getC_ProjectTask_ID();
 					if(projectTaskId > 0) {
@@ -357,22 +363,32 @@ public class AgencyValidator implements ModelValidator
 						if(projectPhase.get_ValueAsInt("CUST_MediaType_ID") != 0)
 							orderLine.set_ValueOfColumn("CUST_MediaType_ID", projectPhase.get_ValueAsInt("CUST_MediaType_ID"));
 					}
+
+					//Openup. Nicolas Sarlabos. 04/08/2020. #14418.
+					if(docType.get_ID() == DOCTYPE_SO_GROUPM_INVENTARIO_ID)
+						orderLine.set_ValueOfColumn("User1_ID", USER1_GROUPM_INVENTARIO_ID);
+					//Fin #14418.
+
 				} else if(po instanceof MOrder) {
 					MOrder order = (MOrder) po;
+					MDocType docType = (MDocType) order.getC_DocTypeTarget();
 					int orderprojectId = order.getC_Project_ID();
 					if(orderprojectId > 0) {
 						if(order.getC_ConversionType_ID() <= 0) {
 							order.setC_ConversionType_ID(MConversionType.TYPE_SPOT);
 						}
 					}
-					// Validates Order Has ProjectPorcentaje 
-					int serviceContractId = order.get_ValueAsInt("S_Contract_ID");
-					if(serviceContractId > 0) {
-						MSContract serviceContract = new MSContract(order.getCtx(), serviceContractId, order.get_TrxName());
-						if(serviceContract.getUser1_ID() > 0) {
-							order.setUser1_ID(serviceContract.getUser1_ID());
+					// Validates Order Has ProjectPorcentaje
+					//Openup. Nicolas Sarlabos. 05/08/2020. #14419.
+					if(!docType.get_ValueAsBoolean("IsSplitDocuments")){
+						int serviceContractId = order.get_ValueAsInt("S_Contract_ID");
+						if(serviceContractId > 0) {
+							MSContract serviceContract = new MSContract(order.getCtx(), serviceContractId, order.get_TrxName());
+							if(serviceContract.getUser1_ID() > 0) {
+								order.setUser1_ID(serviceContract.getUser1_ID());
+							}
 						}
-					}
+					}//Fin #14419.
 
 					if(order.getRef_Order_ID() > 0){
 
@@ -595,15 +611,19 @@ public class AgencyValidator implements ModelValidator
 								order.saveEx();
 							}
 						} else {
-							int user1Id = DB.getSQLValue(order.get_TrxName(), "SELECT p.User1_ID "
-									+ "FROM S_ContractParties p "
-									+ "WHERE S_Contract_ID = ? "
-									+ "AND EXISTS(SELECT 1 FROM AD_User u WHERE u.AD_User_ID = p.AD_User_ID AND u.C_BPartner_ID = ?)", order.get_ValueAsInt("S_Contract_ID"), order.getC_BPartner_ID());
-							//
-							if(user1Id > 0) {
-								order.setUser1_ID(user1Id);
-								order.saveEx();
-							}
+
+							//Openup. Nicolas Sarlabos. 05/08/2020. #14419.
+							if(!documentType.get_ValueAsBoolean("IsSplitDocuments")){
+								int user1Id = DB.getSQLValue(order.get_TrxName(), "SELECT p.User1_ID "
+										+ "FROM S_ContractParties p "
+										+ "WHERE S_Contract_ID = ? "
+										+ "AND EXISTS(SELECT 1 FROM AD_User u WHERE u.AD_User_ID = p.AD_User_ID AND u.C_BPartner_ID = ?)", order.get_ValueAsInt("S_Contract_ID"), order.getC_BPartner_ID());
+								//
+								if(user1Id > 0) {
+									order.setUser1_ID(user1Id);
+									order.saveEx();
+								}
+							}//Fin #14419.
 						}
 					}
 					// Document type IsCustomerApproved = Y and order IsCustomerApproved = N
