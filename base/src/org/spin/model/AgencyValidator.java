@@ -55,7 +55,9 @@ public class AgencyValidator implements ModelValidator
 
 	//Openup. Nicolas Sarlabos. 04/08/2020. #14418.
 	private int DOCTYPE_SO_GROUPM_INVENTARIO_ID = 1000177;
+	private int DOCTYPE_SO_MEDIACOM_XAXIS_ID = 1000180;
 	private int USER1_GROUPM_INVENTARIO_ID = 1000269;
+	private int USER1_XAXIS_ID = 1000226;
 	//Fin #14418.
 
 	public void initialize (ModelValidationEngine engine, MClient client) {
@@ -365,9 +367,11 @@ public class AgencyValidator implements ModelValidator
 					}
 
 					//Openup. Nicolas Sarlabos. 04/08/2020. #14418.
-					if(docType.get_ID() == DOCTYPE_SO_GROUPM_INVENTARIO_ID)
+					if(docType.get_ID() == DOCTYPE_SO_GROUPM_INVENTARIO_ID){
 						orderLine.set_ValueOfColumn("User1_ID", USER1_GROUPM_INVENTARIO_ID);
-					//Fin #14418.
+					} else if(docType.get_ID() == DOCTYPE_SO_MEDIACOM_XAXIS_ID){
+						orderLine.set_ValueOfColumn("User1_ID", USER1_XAXIS_ID);
+					}//Fin #14418.
 
 				} else if(po instanceof MOrder) {
 					MOrder order = (MOrder) po;
