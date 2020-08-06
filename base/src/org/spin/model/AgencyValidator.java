@@ -923,10 +923,10 @@ public class AgencyValidator implements ModelValidator
 //			}
 
 			//Openup. Nicolas Sarlabos. 26/12/2019. #12701.
-            /*if (expenseReport.getAD_Org_ID() == 2000004) {//si es checkin MANEREL
+            if (expenseReport.getAD_Org_ID() == 2000004) {//si es checkin MANEREL
                 if (inOut.isSOTrx() && inOut.getAD_Org_ID() == 2000004) {
 
-                	MBPartner partner = (MBPartner) inOut.getBPartner();
+                	MBPartner partner = inOut.getBPartner();
 
                 	if(partner.getAD_OrgBP_ID() != null){
 
@@ -960,14 +960,14 @@ public class AgencyValidator implements ModelValidator
 						} else throw new AdempiereException("No se obtuvo orden de compra, completa o cerrada, para la orden de venta Nro. " + sOrder.getDocumentNo());
 					}
                 }
-            }//Fin #12701.*/
+            }//Fin #12701.
 		}
 
     /**
      * OpenUp. Nicolas Sarlabos. 04/11/2019. #12701.
      * Metodo que crea la entrega de cliente para la OV asociada a la OC de la recepcion (solo XAXIS).
      */
-    /*private void createDeliveryFromSO(MInOut inout, int orderID, int expenseID) {
+    private void createDeliveryFromSO(MInOut inout, int orderID, int expenseID) {
 
         MInOut inoutHdr = null;
         MOrder order = new MOrder (inout.getCtx(), orderID, inout.get_TrxName());
@@ -975,7 +975,7 @@ public class AgencyValidator implements ModelValidator
 
         for (int i = 0; i < lines.length; i++){
 
-            MOrderLine oLine = (MOrderLine) lines [i];
+            MOrderLine oLine = lines [i];
 
             if(inoutHdr == null){
 
@@ -1029,7 +1029,7 @@ public class AgencyValidator implements ModelValidator
                 throw new AdempiereException (inoutHdr.getProcessMsg());
             }
         } else inoutHdr.deleteEx(true);
-    }*/
+    }
 
     /**
 		 * Reverse Previous commission
