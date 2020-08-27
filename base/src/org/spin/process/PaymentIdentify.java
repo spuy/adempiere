@@ -30,6 +30,8 @@ import org.compiere.process.DocAction;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 
+import java.math.RoundingMode;
+
 /** Generated Process for (Identify Payment)
  *  @author ADempiere (generated) 
  *  @version Release 3.9.2
@@ -76,7 +78,7 @@ public class PaymentIdentify extends PaymentIdentifyAbstract {
 				throw new AdempiereException("@C_Currency_ID@ @Mismatch@");
 			}
 			//	Amount
-			if(!identifiedPayment.getPayAmt().equals(unidentifiedPayment.getPayAmt())) {
+			if(identifiedPayment.getPayAmt().compareTo(unidentifiedPayment.getPayAmt()) != 0) {
 				throw new AdempiereException("@PayAmt@ @Mismatch@");
 			}
 			//	Document Status
@@ -108,13 +110,14 @@ public class PaymentIdentify extends PaymentIdentifyAbstract {
 			identifiedPayment.saveEx();
 		}
 		identifiedPayment.setRef_Payment_ID(unidentifiedPayment.getC_Payment_ID());
+		identifiedPayment.setIsReconciled(unidentifiedPayment.isReconciled());
 		identifiedPayment.saveEx();
 		//	Create reversed for Unidentified
 		MPayment reversePayment = new MPayment(getCtx(), 0, get_TrxName());
 		PO.copyValues(unidentifiedPayment, reversePayment);
 		//	
 		reversePayment.setRef_Payment_ID(unidentifiedPayment.getC_Payment_ID());
-		reversePayment.setIsReconciled(false);
+		reversePayment.setIsReconciled(unidentifiedPayment.isReconciled());
 		reversePayment.setIsUnidentifiedPayment(true);
 		reversePayment.setIsReceipt(!unidentifiedPayment.isReceipt());
 		reversePayment.setPayAmt(reversePayment.getPayAmt());
