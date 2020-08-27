@@ -78,7 +78,7 @@ public class PaymentIdentify extends PaymentIdentifyAbstract {
 				throw new AdempiereException("@C_Currency_ID@ @Mismatch@");
 			}
 			//	Amount
-			if(identifiedPayment.getPayAmt().compareTo(unidentifiedPayment.getPayAmt()) != 0) {
+			if(identifiedPayment.getPayAmt().compareTo(unidentifiedPayment.getPayAmt()) != 0) {//Openup. Nicolas Sarlabos. 27/08/2020. #13512.
 				throw new AdempiereException("@PayAmt@ @Mismatch@");
 			}
 			//	Document Status
@@ -110,14 +110,14 @@ public class PaymentIdentify extends PaymentIdentifyAbstract {
 			identifiedPayment.saveEx();
 		}
 		identifiedPayment.setRef_Payment_ID(unidentifiedPayment.getC_Payment_ID());
-		identifiedPayment.setIsReconciled(unidentifiedPayment.isReconciled());
+		identifiedPayment.setIsReconciled(unidentifiedPayment.isReconciled());//Openup. Nicolas Sarlabos. 27/08/2020. #13512.
 		identifiedPayment.saveEx();
 		//	Create reversed for Unidentified
 		MPayment reversePayment = new MPayment(getCtx(), 0, get_TrxName());
 		PO.copyValues(unidentifiedPayment, reversePayment);
 		//	
 		reversePayment.setRef_Payment_ID(unidentifiedPayment.getC_Payment_ID());
-		reversePayment.setIsReconciled(unidentifiedPayment.isReconciled());
+		reversePayment.setIsReconciled(unidentifiedPayment.isReconciled());//Openup. Nicolas Sarlabos. 27/08/2020. #13512.
 		reversePayment.setIsUnidentifiedPayment(true);
 		reversePayment.setIsReceipt(!unidentifiedPayment.isReceipt());
 		reversePayment.setPayAmt(reversePayment.getPayAmt());
