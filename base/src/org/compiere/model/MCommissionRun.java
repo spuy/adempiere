@@ -2011,9 +2011,22 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 	public boolean closeIt()
 	{
 		log.info("closeIt - " + toString());
+		//Openup. Nicolas Sarlabos. 15/09/2020. #14537.
+		// Before Close
+		String processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_BEFORE_CLOSE);
+		if (processMsg != null)
+			return false;
 
 		//	Close Not delivered Qty
+		setProcessed(true);
 		setDocAction(DOCACTION_None);
+
+		// After Close
+		processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_AFTER_CLOSE);
+		if (processMsg != null)
+			return false;
+		//Fin #14537.
+
 		return true;
 	}	//	closeIt
 	
