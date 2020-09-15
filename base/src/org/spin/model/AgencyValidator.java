@@ -75,6 +75,7 @@ public class AgencyValidator implements ModelValidator
 		engine.addModelChange(MRfQLineQty.Table_Name, this);
 		engine.addModelChange(MRfQResponse.Table_Name, this);
 		engine.addModelChange(MAttachment.Table_Name, this);
+		engine.addModelChange(I_R_Request.Table_Name, this);
 		engine.addDocValidate(MOrder.Table_Name, this);
 		engine.addDocValidate(I_S_TimeExpense.Table_Name, this);
 		engine.addDocValidate(MTimeExpense.Table_Name, this);
@@ -403,6 +404,27 @@ public class AgencyValidator implements ModelValidator
 							order.setUser3_ID(refOrder.getUser1_ID());
 						}
 					}
+				} else if (po instanceof MRequest) {
+					MRequest mRequest = (MRequest) po;
+
+					// Openup Solutions - #14703 - Raul Capecce - 15/09/2020
+					MProject mProject = null;
+					try {
+						if (mRequest.getC_Invoice_ID() > 0) {
+							mProject = (MProject) mRequest.getC_Invoice().getC_Project();
+						} else if (mRequest.getC_Order_ID() > 0) {
+							mProject = (MProject) mRequest.getC_Order().getC_Project();
+						} else if (mRequest.getC_InvoiceLine_ID() > 0) {
+							mProject = (MProject) mRequest.getC_InvoiceLine().getC_Invoice().getC_Project();
+						} else if (mRequest.getC_OrderLine_ID() > 0) {
+							mProject = (MProject) mRequest.getC_OrderLine().getC_Order().getC_Project();
+						}
+						if (mProject != null) {
+							mRequest.setC_Project_ID(mProject.get_ID());
+						}
+					} catch (Exception ignored) {
+					}
+					// Openup Solutions - #14703 - End
 				}
 			} else if(type == TYPE_AFTER_CHANGE) {
 				if (po instanceof MBPartner
