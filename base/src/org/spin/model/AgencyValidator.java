@@ -23,6 +23,7 @@ import java.util.Calendar;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.*;
@@ -1348,6 +1349,9 @@ public class AgencyValidator implements ModelValidator
 				return;
 			}
 			removeLineFromCommission(invoice, commissionTypeId);
+
+			List<MCommissionRun> currentCRuns = new ArrayList<>();
+
 			AtomicReference<BigDecimal> reverseAmount = new AtomicReference<BigDecimal>(Env.ZERO);
 			new Query(invoice.getCtx(), I_C_Commission.Table_Name, I_C_CommissionType.COLUMNNAME_C_CommissionType_ID + " = ? "
 					+ "AND IsSplitDocuments = ?", invoice.get_TrxName())
@@ -1403,9 +1407,43 @@ public class AgencyValidator implements ModelValidator
 				} else {
 					throw new AdempiereException(commissionRun.getProcessMsg());
 				}
+				currentCRuns.add(commissionRun);
 			});
 			//	Reverse previous commission
 			reversePreviousCommissionOrders(invoice, reverseAmount.get().negate());
+			closePreviousInvoiceCRun(invoice, currentCRuns);
+		}
+
+		/**
+		 * Openup Solutions - #14667
+		 * Cierra los cálculos de comisión previos al que se está generando actualmente
+		 * @author Raul Capecce
+		 * @param invoice Factura que tiene los Cálculos de Comisión a cerrar
+		 * @param currentCRuns Los CRun recién creados que no deben ser cerrados
+		 */
+		private static void closePreviousInvoiceCRun(MInvoice invoice, List<MCommissionRun> currentCRuns) {
+			try {
+				String sqlPrevCRunInv = "docStatus<>'CL' AND C_Invoice_ID=? AND C_Order_ID=?";
+				List<Object> params = new ArrayList<>();
+				params.add(invoice.get_ID());
+				params.add(invoice.getC_Order_ID());
+
+				if (!currentCRuns.isEmpty()) {
+					sqlPrevCRunInv += " AND C_CommissionRun_ID NOT IN (";
+					sqlPrevCRunInv += currentCRuns.stream().map(mCommissionRun -> String.valueOf(mCommissionRun.get_ID())).collect(Collectors.joining(","));
+					sqlPrevCRunInv += " )";
+				}
+
+				List<MCommissionRun> prevCRuns = new Query(invoice.getCtx(), I_C_CommissionRun.Table_Name, sqlPrevCRunInv, invoice.get_TrxName())
+					.setParameters(params)
+					.list();
+				for (MCommissionRun prevCRun : prevCRuns) {
+					prevCRun.processIt(DocAction.ACTION_Close);
+					prevCRun.saveEx();
+				}
+			} catch (Exception e) {
+
+			}
 		}
 
 		/**
