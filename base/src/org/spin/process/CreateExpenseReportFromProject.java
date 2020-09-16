@@ -159,6 +159,7 @@ public class CreateExpenseReportFromProject extends CreateExpenseReportFromProje
 		if(order.get_ValueAsInt("S_Contract_ID") > 0) {
 			expenseReport.set_ValueOfColumn("S_Contract_ID", order.get_ValueAsInt("S_Contract_ID"));
 		}
+		expenseReport.set_ValueOfColumn("IsNotGenerateReceipt", getIsNotGenerateReceipt());//Openup. Nicolas Sarlabos. 16/09/2020. #14415.
 		expenseReport.saveEx();
 	}
 	

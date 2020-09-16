@@ -815,15 +815,17 @@ public class AgencyValidator implements ModelValidator
 							orders.put(salesOrderLine.getC_Order_ID(), salesOrderLines);
 						}
 						//	For purchases
-						if(linkOrderLineId > 0) {
-							MOrderLine salesOrderLine = new MOrderLine(expenseReport.getCtx(), linkOrderLineId, expenseReport.get_TrxName());
-							Hashtable<Integer, BigDecimal> purchaseOrderLines = orders.get(salesOrderLine.getC_Order_ID());
-							if(purchaseOrderLines == null) {
-								purchaseOrderLines = new Hashtable<Integer, BigDecimal>();
+						if(!expenseReport.get_ValueAsBoolean("IsNotGenerateReceipt")){
+							if(linkOrderLineId > 0) {
+								MOrderLine salesOrderLine = new MOrderLine(expenseReport.getCtx(), linkOrderLineId, expenseReport.get_TrxName());
+								Hashtable<Integer, BigDecimal> purchaseOrderLines = orders.get(salesOrderLine.getC_Order_ID());
+								if(purchaseOrderLines == null) {
+									purchaseOrderLines = new Hashtable<Integer, BigDecimal>();
+								}
+								//	Add
+								purchaseOrderLines.put(salesOrderLine.getC_OrderLine_ID(), line.getQty());
+								orders.put(salesOrderLine.getC_Order_ID(), purchaseOrderLines);
 							}
-							//	Add
-							purchaseOrderLines.put(salesOrderLine.getC_OrderLine_ID(), line.getQty());
-							orders.put(salesOrderLine.getC_Order_ID(), purchaseOrderLines);
 						}
 					}
 					//	Generate from orders
