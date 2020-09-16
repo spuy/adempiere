@@ -39,14 +39,16 @@ public abstract class CreateExpenseReportFromProjectAbstract extends SvrProcess 
 	private Timestamp dateReport;
 	/**	Parameter Value for Document Action	*/
 	private String docAction;
+	//Openup. Nicolas Sarlabos. 16/09/2020. #14415.
 	public static final String ISNOTGENERATERECEIPT = "IsNotGenerateReceipt";
 	private boolean isNotGenerateReceipt;
+	//Fin #14415.
 
 	@Override
 	protected void prepare() {
 		dateReport = getParameterAsTimestamp(DATEREPORT);
 		docAction = getParameterAsString(DOCACTION);
-		isNotGenerateReceipt = getParameterAsBoolean(ISNOTGENERATERECEIPT);
+		isNotGenerateReceipt = getParameterAsBoolean(ISNOTGENERATERECEIPT);//Openup. Nicolas Sarlabos. 16/09/2020. #14415.
 	}
 
 	/**	 Getter Parameter Value for Report Date	*/
@@ -64,7 +66,7 @@ public abstract class CreateExpenseReportFromProjectAbstract extends SvrProcess 
 		return docAction;
 	}
 
-	protected boolean getIsNotGenerateReceipt() { return isNotGenerateReceipt; }
+	protected boolean getIsNotGenerateReceipt() { return isNotGenerateReceipt; }//Openup. Nicolas Sarlabos. 16/09/2020. #14415.
 
 	/**	 Setter Parameter Value for Document Action	*/
 	protected void setDocAction(String docAction) {

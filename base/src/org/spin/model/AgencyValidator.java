@@ -815,7 +815,7 @@ public class AgencyValidator implements ModelValidator
 							orders.put(salesOrderLine.getC_Order_ID(), salesOrderLines);
 						}
 						//	For purchases
-						if(!expenseReport.get_ValueAsBoolean("IsNotGenerateReceipt")){
+						if(!expenseReport.get_ValueAsBoolean("IsNotGenerateReceipt")){//Openup. Nicolas Sarlabos. 16/09/2020. #14415.
 							if(linkOrderLineId > 0) {
 								MOrderLine salesOrderLine = new MOrderLine(expenseReport.getCtx(), linkOrderLineId, expenseReport.get_TrxName());
 								Hashtable<Integer, BigDecimal> purchaseOrderLines = orders.get(salesOrderLine.getC_Order_ID());
