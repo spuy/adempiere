@@ -1374,9 +1374,11 @@ public class AgencyValidator implements ModelValidator
 
 				// Openup Solutions - #14737 - Raul Capecce - 18/09/2020
 				// Además de referenciar la factura, se revisa si hay Notas de Corrección para agregar al Calculo de Comision
-				List<MInvoice> refInvoices = getReferencedCorrectionNotes(invoice);
-				for (MInvoice refInvoice : refInvoices) {
-					commissionRun.addArrayFilterValues("C_Invoice_ID", refInvoice.get_ID());
+				if (!invoice.isSOTrx()) {
+					List<MInvoice> refInvoices = getReferencedCorrectionNotes(invoice);
+					for (MInvoice refInvoice : refInvoices) {
+						commissionRun.addArrayFilterValues("C_Invoice_ID", refInvoice.get_ID());
+					}
 				}
 
 				commissionRun.setDocStatus(MCommissionRun.DOCSTATUS_Drafted);
