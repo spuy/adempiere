@@ -1262,10 +1262,10 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 		//	for current document
 		if(additionalValues != null
 			&& isCustom(commission.getDocBasisType())) {
-			for(Entry<String, Integer> value : additionalValues.entrySet()) {
+			for(Entry<String, String> value : additionalValues.entrySet()) {
 				String columnName = getSQLColumnName(value.getKey(), commissionType);
 				if(!Util.isEmpty(columnName)) {
-					sqlWhere.append(" AND ").append(columnName).append("=").append(value.getValue());
+					sqlWhere.append(" AND ").append(columnName).append(" IN (").append(value.getValue()).append(")");
 				}
 			}
 		}
@@ -2172,8 +2172,26 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
     	if(additionalValues == null) {
     		additionalValues = new Hashtable<>();
     	}
-    	additionalValues.put(columnName, recordId);
+    	additionalValues.put(columnName, String.valueOf(recordId));
     }
+
+	/**
+	 * Set current id for run commission based on current document
+	 * @param columnName
+	 * @param recordId
+	 */
+	public void addArrayFilterValues(String columnName, int recordId) {
+		if(additionalValues == null) {
+			additionalValues = new Hashtable<>();
+		}
+		String value = additionalValues.get(columnName);
+		if (value == null || value.isEmpty()) {
+			value = String.valueOf(recordId);
+		} else {
+			value += ", " + recordId;
+		}
+		additionalValues.put(columnName, value);
+	}
     /**	Invoices	*/
-	private Hashtable<String, Integer> additionalValues;
+	private Hashtable<String, String> additionalValues;
 }

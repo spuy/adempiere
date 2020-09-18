@@ -18,10 +18,7 @@ package org.spin.model;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -1374,6 +1371,14 @@ public class AgencyValidator implements ModelValidator
 				commissionRun.saveEx();
 				//	Process commission
 				commissionRun.addFilterValues("C_Invoice_ID", invoice.getC_Invoice_ID());
+
+				// Openup Solutions - #14737 - Raul Capecce - 18/09/2020
+				// Además de referenciar la factura, se revisa si hay Notas de Corrección para agregar al Calculo de Comision
+				List<MInvoice> refInvoices = getReferencedCorrectionNotes(invoice);
+				for (MInvoice refInvoice : refInvoices) {
+					commissionRun.addArrayFilterValues("C_Invoice_ID", refInvoice.get_ID());
+				}
+
 				commissionRun.setDocStatus(MCommissionRun.DOCSTATUS_Drafted);
 				//	Complete
 				if(commissionRun.processIt(MCommissionRun.DOCACTION_Complete)) {
@@ -1473,6 +1478,37 @@ public class AgencyValidator implements ModelValidator
 				line.deleteEx(true);
 			}
 		}
+
+	/**
+	 * Obtiene todas las notas de Corrección referentes a la factura o ticket mediante Asignaciones Completas
+	 * Solo obtendrá registros que sean docBaseType="__C", partiendo de una factura o ticket
+	 * @param mInvoice Factura o Ticket (debe ser docBaseType="__I")
+	 * @return Notas de Corrección referenciadas
+	 */
+	public static List<MInvoice> getReferencedCorrectionNotes(MInvoice mInvoice) {
+		List<MInvoice> ret = new ArrayList<>();
+
+		try {
+			if (mInvoice.getC_DocType().getDocBaseType().endsWith("I")) {
+				List<MAllocationHdr> mAllocationHdrs = Arrays
+					.stream(MAllocationHdr.getOfInvoice(mInvoice.getCtx(), mInvoice.get_ID(), mInvoice.get_TrxName()))
+					.filter(mAllocationHdr -> mAllocationHdr.getDocStatus().equalsIgnoreCase("CO"))
+					.collect(Collectors.toList());
+
+				for (MAllocationHdr mAllocationHdr : mAllocationHdrs) {
+					MAllocationLine[] mAllocationLines = mAllocationHdr.getLines(true);
+					for (MAllocationLine mAllocationLine : mAllocationLines) {
+						MInvoice refInv = mAllocationLine.getInvoice();
+						if (refInv.get_ID() != mInvoice.get_ID() && refInv.getC_DocType().getDocBaseType().endsWith("C")) {
+							ret.add(refInv);
+						}
+					}
+				}
+			}
+		} catch (Exception ignored) {
+		}
+		return ret;
+	}
 
 
 		@Override
