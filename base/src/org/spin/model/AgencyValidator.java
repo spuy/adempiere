@@ -858,9 +858,12 @@ public class AgencyValidator implements ModelValidator
 						}
 						invoice.saveEx();
 						if(invoice.isSOTrx()) {
-							if(!order.get_ValueAsBoolean("IsAllowToInvoice")) {
+							//Openup. Nicolas Sarlabos. 05/10/2020. #14819.
+							MDocType docType = (MDocType) invoice.getC_DocTypeTarget();
+							if(!order.get_ValueAsBoolean("IsAllowToInvoice")
+									&& !docType.getDocBaseType().equalsIgnoreCase(MDocType.DOCBASETYPE_ARCreditMemo)) {
 								throw new AdempiereException("@C_Order_ID@ " + order.getDocumentNo() + " @IsAllowToInvoiceRequired@");
-							}
+							}//Fin #14819.
 						}
 					}
 				} else if(timing == TIMING_AFTER_COMPLETE) {
