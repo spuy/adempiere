@@ -801,16 +801,18 @@ public class AgencyValidator implements ModelValidator
 							continue;
 						}
 						//	For sales
-						if(salesOrderLineId > 0) {
-							MOrderLine salesOrderLine = new MOrderLine(expenseReport.getCtx(), salesOrderLineId, expenseReport.get_TrxName());
-							Hashtable<Integer, BigDecimal> salesOrderLines = orders.get(salesOrderLine.getC_Order_ID());
-							if(salesOrderLines == null) {
-								salesOrderLines = new Hashtable<Integer, BigDecimal>();
+						if(!expenseReport.get_ValueAsBoolean("IsNotGenerateDelivery")) {//Openup. Nicolas Sarlabos. 21/10/2020. #14905.
+							if(salesOrderLineId > 0) {
+								MOrderLine salesOrderLine = new MOrderLine(expenseReport.getCtx(), salesOrderLineId, expenseReport.get_TrxName());
+								Hashtable<Integer, BigDecimal> salesOrderLines = orders.get(salesOrderLine.getC_Order_ID());
+								if(salesOrderLines == null) {
+									salesOrderLines = new Hashtable<Integer, BigDecimal>();
+								}
+								//	Add
+								salesOrderLines.put(salesOrderLine.getC_OrderLine_ID(), line.getQty());
+								orders.put(salesOrderLine.getC_Order_ID(), salesOrderLines);
 							}
-							//	Add
-							salesOrderLines.put(salesOrderLine.getC_OrderLine_ID(), line.getQty());
-							orders.put(salesOrderLine.getC_Order_ID(), salesOrderLines);
-						}
+						}//Fin #14905.
 						//	For purchases
 						if(!expenseReport.get_ValueAsBoolean("IsNotGenerateReceipt")){//Openup. Nicolas Sarlabos. 16/09/2020. #14415.
 							if(linkOrderLineId > 0) {

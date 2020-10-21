@@ -49,6 +49,14 @@ public class CreateExpenseReportFromProject extends CreateExpenseReportFromProje
 			boolean isReleaseOrderBalance = getSelectionAsBoolean(key, "SOL_IsReleaseOrderBalance");
 			BigDecimal qty = getSelectionAsBigDecimal(key, "SOL_QtyToDeliver");
 			MOrderLine orderLine = new MOrderLine(getCtx(), orderLineId, get_TrxName());
+
+			//Openup. Nicolas Sarlabos. 21/10/2020. #14905.
+			if(!orderLine.getC_Order().isSOTrx()){
+				linkOrderLineId = getSelectionAsInt(key, "SOL_C_OrderLine_ID");
+				orderLineId = getSelectionAsInt(key, "SOL_Link_OrderLine_ID");
+				orderLine = new MOrderLine(getCtx(), orderLineId, get_TrxName());
+			}//Fin #14905.
+
 			if(isReleaseOrderBalance) {
 				BigDecimal qtyDelivered = orderLine.getQtyDelivered();
 				BigDecimal qtyOrdered = orderLine.getQtyOrdered();
@@ -160,6 +168,7 @@ public class CreateExpenseReportFromProject extends CreateExpenseReportFromProje
 			expenseReport.set_ValueOfColumn("S_Contract_ID", order.get_ValueAsInt("S_Contract_ID"));
 		}
 		expenseReport.set_ValueOfColumn("IsNotGenerateReceipt", getIsNotGenerateReceipt());//Openup. Nicolas Sarlabos. 16/09/2020. #14415.
+		expenseReport.set_ValueOfColumn("IsNotGenerateDelivery", getIsNotGenerateDelivery());//Openup. Nicolas Sarlabos. 21/10/2020. #14905.
 		expenseReport.saveEx();
 	}
 	
