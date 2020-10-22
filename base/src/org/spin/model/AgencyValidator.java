@@ -396,6 +396,17 @@ public class AgencyValidator implements ModelValidator
 						orderLine.set_ValueOfColumn("User1_ID", USER1_XAXIS_ID);
 					}//Fin #14418.
 
+					//Openup. Nicolas Sarlabos. 22/10/2020. #14912.
+					if (orderLine.getLink_OrderLine_ID() > 0) {
+						MOrderLine linkOrderLine = (MOrderLine) orderLine.getLink_OrderLine();
+						MOrder linkOrder = (MOrder) linkOrderLine.getC_Order();
+
+						if (linkOrder.getC_DocTypeTarget_ID() == DOCTYPE_SO_MEDIACOM_XAXIS_ID
+								|| linkOrder.getC_DocTypeTarget_ID() == DOCTYPE_SO_MEDIACOM_INVENTARIO_ID) {
+							orderLine.setUser1_ID(linkOrderLine.getUser1_ID());
+						}
+					}//Fin #14912.
+
 				} else if(po instanceof MOrder) {
 					MOrder order = (MOrder) po;
 					MDocType docType = (MDocType) order.getC_DocTypeTarget();
