@@ -346,8 +346,20 @@ public class AgencyValidator implements ModelValidator
 						MProjectTask projectTask = new MProjectTask(orderLine.getCtx(), projectTaskId,orderLine.get_TrxName());
 						if(projectTask.getC_Campaign_ID() != 0)
 							orderLine.set_ValueOfColumn("C_Campaign_ID", projectTask.getC_Campaign_ID());
-						if(projectTask.getUser1_ID() != 0)
-							orderLine.set_ValueOfColumn("User1_ID", projectTask.getUser1_ID());
+
+						//Openup. Nicolas Sarlabos. 21/10/2020. #14916
+						if (order.getRef_Order_ID() > 0) {
+							if (projectTask.getUser1_ID() != 0)
+								orderLine.set_ValueOfColumn("User1_ID", projectTask.getUser3_ID());
+							if (projectTask.getUser3_ID() != 0)
+								orderLine.set_ValueOfColumn("User3_ID", projectTask.getUser1_ID());
+						} else {
+							if (projectTask.getUser1_ID() != 0)
+								orderLine.set_ValueOfColumn("User1_ID", projectTask.getUser1_ID());
+							if (projectTask.getUser3_ID() != 0)
+								orderLine.set_ValueOfColumn("User3_ID", projectTask.getUser3_ID());
+						}//Fin #14916.
+
 						if(projectTask.get_ValueAsInt("CUST_MediaType_ID") != 0)
 							orderLine.set_ValueOfColumn("CUST_MediaType_ID", projectTask.get_ValueAsInt("CUST_MediaType_ID"));
 						MProjectPhase projectPhasefromTask = new MProjectPhase(orderLine.getCtx(), projectTask.getC_ProjectPhase_ID(),orderLine.get_TrxName());
@@ -357,8 +369,20 @@ public class AgencyValidator implements ModelValidator
 						MProjectPhase projectPhase = new MProjectPhase(orderLine.getCtx(), projectPhaseId, orderLine.get_TrxName());						
 						if(projectPhase.getC_Campaign_ID() != 0)
 							orderLine.set_ValueOfColumn("C_Campaign_ID", projectPhase.getC_Campaign_ID());
-						if(projectPhase.getUser1_ID() != 0)
-							orderLine.set_ValueOfColumn("User1_ID", projectPhase.getUser1_ID());
+
+						//Openup. Nicolas Sarlabos. 21/10/2020. #14916
+						if (order.getRef_Order_ID() > 0) {
+							if (projectPhase.getUser1_ID() != 0)
+								orderLine.set_ValueOfColumn("User1_ID", projectPhase.getUser3_ID());
+							if (projectPhase.getUser3_ID() != 0)
+								orderLine.set_ValueOfColumn("User3_ID", projectPhase.getUser1_ID());
+						} else {
+							if (projectPhase.getUser1_ID() != 0)
+								orderLine.set_ValueOfColumn("User1_ID", projectPhase.getUser1_ID());
+							if (projectPhase.getUser3_ID() != 0)
+								orderLine.set_ValueOfColumn("User3_ID", projectPhase.getUser3_ID());
+						}//Fin #14916.
+
 						if(projectPhase.getC_Project_ID() != 0)
 							orderLine.set_ValueOfColumn("C_Project_ID", projectPhase.getC_Project_ID());
 						if(projectPhase.get_ValueAsInt("CUST_MediaType_ID") != 0)
