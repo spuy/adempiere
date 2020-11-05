@@ -54,7 +54,12 @@ public class CreateExpenseReportFromProject extends CreateExpenseReportFromProje
 			if(!orderLine.getC_Order().isSOTrx()){
 				linkOrderLineId = getSelectionAsInt(key, "SOL_C_OrderLine_ID");
 				orderLineId = getSelectionAsInt(key, "SOL_Link_OrderLine_ID");
-				orderLine = new MOrderLine(getCtx(), orderLineId, get_TrxName());
+
+				//Openup. Nicolas Sarlabos. 04/11/2020. #14990.
+				if(orderLineId > 0){
+					orderLine = new MOrderLine(getCtx(), orderLineId, get_TrxName());
+				} else orderLine = new MOrderLine(getCtx(), linkOrderLineId, get_TrxName());
+				//Fin #14990.
 			}//Fin #14905.
 
 			if(isReleaseOrderBalance) {
