@@ -81,7 +81,7 @@ public class PSCreateFromInvoice extends PSCreateFromInvoiceAbstract {
 			//	get values from result set
 			int C_Invoice_ID = key;
 			int C_InvoicePaySchedule_ID = getSelectionAsInt(key, "INV_C_InvoicePaySchedule_ID");
-			String PaymentRule = getPaymentRule() != null? getPaymentRule(): getSelectionAsString(key, "INV_PaymentRule");
+			String PaymentRule = getSelectionAsString(key, "INV_PaymentRule");
 			BigDecimal AmtSource = getSelectionAsBigDecimal(key, "INV_AmtSource");
 			BigDecimal OpenAmt = getSelectionAsBigDecimal(key, "INV_OpenAmt");
 			BigDecimal PayAmt = getSelectionAsBigDecimal(key, "INV_PayAmt");

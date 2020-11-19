@@ -21,7 +21,7 @@ import java.sql.Timestamp;
 
 /** Generated Process for (Payment Selection Generate (From Invoice))
  *  @author ADempiere (generated) 
- *  @version Release 3.9.3
+ *  @version Release 3.9.0
  */
 public abstract class PSCreateFromInvoiceAbstract extends SvrProcess {
 	/** Process Value 	*/
@@ -31,15 +31,13 @@ public abstract class PSCreateFromInvoiceAbstract extends SvrProcess {
 	/** Process Id 	*/
 	private static final int ID_FOR_PROCESS = 53890;
 	/**	Parameter Name for Bank Account	*/
-	public static final String C_BANKACCOUNT_ID = "C_BankAccount_ID";
+	private static final String C_BANKACCOUNT_ID = "C_BankAccount_ID";
 	/**	Parameter Name for Target Document Type	*/
-	public static final String C_DOCTYPETARGET_ID = "C_DocTypeTarget_ID";
+	private static final String C_DOCTYPETARGET_ID = "C_DocTypeTarget_ID";
 	/**	Parameter Name for Document Date	*/
-	public static final String DATEDOC = "DateDoc";
+	private static final String DATEDOC = "DateDoc";
 	/**	Parameter Name for Payment date	*/
-	public static final String PAYDATE = "PayDate";
-	/**	Parameter Name for Payment Rule	*/
-	public static final String PAYMENTRULE = "PaymentRule";
+	private static final String PAYDATE = "PayDate";
 	/**	Parameter Value for Bank Account	*/
 	private int bankAccountId;
 	/**	Parameter Value for Target Document Type	*/
@@ -48,8 +46,6 @@ public abstract class PSCreateFromInvoiceAbstract extends SvrProcess {
 	private Timestamp dateDoc;
 	/**	Parameter Value for Payment date	*/
 	private Timestamp payDate;
-	/**	Parameter Value for Payment Rule	*/
-	private String paymentRule;
 
 	@Override
 	protected void prepare() {
@@ -57,7 +53,6 @@ public abstract class PSCreateFromInvoiceAbstract extends SvrProcess {
 		docTypeTargetId = getParameterAsInt(C_DOCTYPETARGET_ID);
 		dateDoc = getParameterAsTimestamp(DATEDOC);
 		payDate = getParameterAsTimestamp(PAYDATE);
-		paymentRule = getParameterAsString(PAYMENTRULE);
 	}
 
 	/**	 Getter Parameter Value for Bank Account	*/
@@ -98,16 +93,6 @@ public abstract class PSCreateFromInvoiceAbstract extends SvrProcess {
 	/**	 Setter Parameter Value for Payment date	*/
 	protected void setPayDate(Timestamp payDate) {
 		this.payDate = payDate;
-	}
-
-	/**	 Getter Parameter Value for Payment Rule	*/
-	protected String getPaymentRule() {
-		return paymentRule;
-	}
-
-	/**	 Setter Parameter Value for Payment Rule	*/
-	protected void setPaymentRule(String paymentRule) {
-		this.paymentRule = paymentRule;
 	}
 
 	/**	 Getter Parameter Value for Process ID	*/
