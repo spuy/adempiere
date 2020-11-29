@@ -384,6 +384,7 @@ public class MovementGenerate extends MovementGenerateAbstract
 		if (storages == null) {
 			MMovementLine line = new MMovementLine(currentMovement);
 			line.setOrderLine(orderLine, Env.ZERO, false);
+			line.setM_LocatorTo_ID(orderLine.getM_LocatorTo_ID());
 			line.setMovementQty(qty);    //	Correct UOM
 			if (orderLine.getQtyEntered().compareTo(orderLine.getQtyOrdered()) != 0)
 				line.setMovementQty(qty
