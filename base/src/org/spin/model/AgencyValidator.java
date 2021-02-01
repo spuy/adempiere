@@ -955,6 +955,12 @@ public class AgencyValidator implements ModelValidator
 		private void generateInOutFromOrder(MTimeExpense expenseReport, int orderId, Hashtable<Integer, BigDecimal> lines) {
 			MOrder order = new MOrder(expenseReport.getCtx(), orderId, expenseReport.get_TrxName());
 			MInOut inOut = new MInOut(order, 0, expenseReport.getDateReport());
+
+			//Solop. Nicolas Sarlabos. 01/02/2021. #15491.
+			if (!MPeriod.isOpen(inOut.getCtx(), expenseReport.getDateReport(), inOut.getC_DocType().getDocBaseType(), inOut.getAD_Org_ID()))
+				throw new AdempiereException("ERROR: Período cerrado para tipo de documento '" + inOut.getC_DocType().getName() + "'");
+			//#15491.
+
 			inOut.setM_Warehouse_ID(order.getM_Warehouse_ID());
 			inOut.set_ValueOfColumn("S_TimeExpense_ID", expenseReport.get_ID());//Openup. Nicolas Sarlabos. 24/12/2019. #13331.
 			inOut.saveEx();
