@@ -202,9 +202,9 @@ public class MCommissionDetail extends X_C_CommissionDetail
 		}
 		// Setting the max percentage between commissionLine.amtMultiplier vs commissionAmt.maxPergentage
 		BigDecimal amtMult = commissionLine.getAmtMultiplier();
-		if (parent.getMaxPercentage() != null && parent.getMaxPercentage().compareTo(Env.ZERO) > 0) {
+		if (parent.getMaxPercentage() != null && parent.getMaxPercentage().compareTo(Env.ZERO) >= 0) {
 			BigDecimal maxMultiplier = parent.getMaxPercentage().divide(Env.ONEHUNDRED, MathContext.DECIMAL128);
-			if (amtMult.compareTo(maxMultiplier) > 0) {
+			if (amtMult.compareTo(maxMultiplier) >= 0) {
 				amtMult = maxMultiplier;
 			}
 		}
