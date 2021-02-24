@@ -1315,7 +1315,7 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 		if (maxAmtMultiplier != null) {
 			commissionAmt.setMaxPercentage(maxAmtMultiplier);
 		} else {
-			commissionAmt.setMaxPercentage(commissionLine.getMaxPercentage());
+			commissionAmt.setMaxPercentage(Env.ONE.negate());
 		}
 
 

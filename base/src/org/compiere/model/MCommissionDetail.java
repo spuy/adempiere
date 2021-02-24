@@ -186,15 +186,15 @@ public class MCommissionDetail extends X_C_CommissionDetail
 		if (commissionLine.isPositiveOnly() && commissionAmt.signum() < 0) {
 			commissionAmt = Env.ZERO;
 		}
-		//	Validate Max Percentage
-		if(parent.getMaxPercentage() != null
-				&& !parent.getMaxPercentage().equals(Env.ZERO)
-				&& parent.getPercentage() != null
-				&& parent.getPercentage().compareTo(parent.getMaxPercentage()) > 0) {
-			//	Go to Forecast
-			commissionAmt = commissionAmt.multiply(Env.ONE.divide(parent.getPercentage(), MathContext.DECIMAL128)).multiply(Env.ONEHUNDRED);
-			commissionAmt = commissionAmt.multiply(parent.getMaxPercentage().divide(Env.ONEHUNDRED, MathContext.DECIMAL128));
-		}
+//		//	Validate Max Percentage
+//		if(parent.getMaxPercentage() != null
+//				&& !parent.getMaxPercentage().equals(Env.ZERO)
+//				&& parent.getPercentage() != null
+//				&& parent.getPercentage().compareTo(parent.getMaxPercentage()) > 0) {
+//			//	Go to Forecast
+//			commissionAmt = commissionAmt.multiply(Env.ONE.divide(parent.getPercentage(), MathContext.DECIMAL128)).multiply(Env.ONEHUNDRED);
+//			commissionAmt = commissionAmt.multiply(parent.getMaxPercentage().divide(Env.ONEHUNDRED, MathContext.DECIMAL128));
+//		}
 		//	Set when is null
 		if(amtMultiplier != null) {
 			commissionLine.setIsPercentage(isPercentage);
