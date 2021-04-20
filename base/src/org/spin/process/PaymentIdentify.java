@@ -133,7 +133,7 @@ public class PaymentIdentify extends PaymentIdentifyAbstract {
 		reversePayment.processIt(MPayment.DOCACTION_Complete);
 		reversePayment.saveEx();
 		//	Create Allocation
-		createAllocation(unidentifiedPayment, reversePayment);
+		createAllocation(identifiedPayment, unidentifiedPayment, reversePayment);//Solop. Nicolas Sarlabos. 20/04/2021. #15850.
 		return "@Created@";
 	}
 	
@@ -142,24 +142,24 @@ public class PaymentIdentify extends PaymentIdentifyAbstract {
 	 * @param identifiedPayment
 	 * @param unidentifiedPayment
 	 */
-	private void createAllocation(MPayment identifiedPayment, MPayment unidentifiedPayment) {
+	private void createAllocation(MPayment identifiedPayment, MPayment unidentifiedPayment, MPayment reversePayment) {
 		//	Create automatic Allocation
-		MAllocationHdr allocationHdr = new MAllocationHdr (getCtx(), false, getDateTrx(), identifiedPayment.getC_Currency_ID(),
-				Msg.translate(getCtx(), "C_Payment_ID")	+ ": " + unidentifiedPayment.getDocumentNo(), get_TrxName());
+		MAllocationHdr allocationHdr = new MAllocationHdr (getCtx(), false, getDateTrx(), unidentifiedPayment.getC_Currency_ID(),
+				Msg.translate(getCtx(), "C_Payment_ID")	+ ": " + reversePayment.getDocumentNo(), get_TrxName());
 		allocationHdr.setAD_Org_ID(identifiedPayment.getAD_Org_ID());
 		allocationHdr.setDateAcct(identifiedPayment.getDateAcct());
 		allocationHdr.saveEx(get_TrxName());
 
 		//	Original Allocation
-		MAllocationLine allocationLine = new MAllocationLine (allocationHdr, identifiedPayment.getPayAmt(true), Env.ZERO, Env.ZERO, Env.ZERO);
-		allocationLine.setDocInfo(identifiedPayment.getC_BPartner_ID(), 0, 0);
-		allocationLine.setPaymentInfo(identifiedPayment.getC_Payment_ID(), 0);
+		MAllocationLine allocationLine = new MAllocationLine (allocationHdr, unidentifiedPayment.getPayAmt(true), Env.ZERO, Env.ZERO, Env.ZERO);
+		allocationLine.setDocInfo(unidentifiedPayment.getC_BPartner_ID(), 0, 0);
+		allocationLine.setPaymentInfo(unidentifiedPayment.getC_Payment_ID(), 0);
 		allocationLine.saveEx(get_TrxName());
 
 		//	Reversal Allocation
-		allocationLine = new MAllocationLine (allocationHdr, unidentifiedPayment.getPayAmt(true), Env.ZERO, Env.ZERO, Env.ZERO);
-		allocationLine.setDocInfo(unidentifiedPayment.getC_BPartner_ID(), 0, 0);
-		allocationLine.setPaymentInfo(unidentifiedPayment.getC_Payment_ID(), 0);
+		allocationLine = new MAllocationLine (allocationHdr, reversePayment.getPayAmt(true), Env.ZERO, Env.ZERO, Env.ZERO);
+		allocationLine.setDocInfo(reversePayment.getC_BPartner_ID(), 0, 0);
+		allocationLine.setPaymentInfo(reversePayment.getC_Payment_ID(), 0);
 		allocationLine.saveEx(get_TrxName());
 
 		if (!allocationHdr.processIt(DocAction.ACTION_Complete)) {
@@ -167,18 +167,18 @@ public class PaymentIdentify extends PaymentIdentifyAbstract {
 		}
 
 		allocationHdr.saveEx(get_TrxName());
-		StringBuffer info = new StringBuffer (unidentifiedPayment.getDocumentNo());
+		StringBuffer info = new StringBuffer (reversePayment.getDocumentNo());
 		info.append(" - @C_AllocationHdr_ID@: ").append(allocationHdr.getDocumentNo());
 
 		//	Update BPartner
-		if (identifiedPayment.getC_BPartner_ID() != 0) {
-			MBPartner partner = new MBPartner (getCtx(), identifiedPayment.getC_BPartner_ID(), get_TrxName());
+		if (unidentifiedPayment.getC_BPartner_ID() != 0) {
+			MBPartner partner = new MBPartner (getCtx(), unidentifiedPayment.getC_BPartner_ID(), get_TrxName());
 			partner.setTotalOpenBalance();
 			partner.save(get_TrxName());
 		}
-		identifiedPayment.setIsAllocated(true);
-		identifiedPayment.saveEx();
 		unidentifiedPayment.setIsAllocated(true);
 		unidentifiedPayment.saveEx();
+		reversePayment.setIsAllocated(true);
+		reversePayment.saveEx();
 	}
 }
