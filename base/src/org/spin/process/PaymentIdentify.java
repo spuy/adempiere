@@ -121,6 +121,10 @@ public class PaymentIdentify extends PaymentIdentifyAbstract {
 		reversePayment.setIsUnidentifiedPayment(true);
 		reversePayment.setIsReceipt(!unidentifiedPayment.isReceipt());
 		reversePayment.setPayAmt(reversePayment.getPayAmt());
+		//Solop. Nicolas Sarlabos. 22/04/2021. #15850.
+		reversePayment.setDateTrx(identifiedPayment.getDateTrx());
+		reversePayment.setDateAcct(identifiedPayment.getDateAcct());
+		//Fin #15850.
 		//	Get from organization
 		MOrgInfo organizationInfo = MOrgInfo.get(getCtx(), reversePayment.getAD_Org_ID(), get_TrxName());
 		if(organizationInfo.getUnidentifiedDocumentType(reversePayment.isReceipt()) != 0) {
