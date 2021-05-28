@@ -577,6 +577,7 @@ public class AgencyValidator implements ModelValidator
 
 			MOrder reverseOrder = new MOrder(mOrder.getCtx(), 0, mOrder.get_TrxName());
 			PO.copyValues(mOrder, reverseOrder);
+			reverseOrder.setAD_Org_ID(mOrder.getAD_Org_ID());
 			reverseOrder.setDocumentNo(null);
 			reverseOrder.setDateOrdered(currentTimestamp);
 			reverseOrder.setDatePromised(currentTimestamp);
