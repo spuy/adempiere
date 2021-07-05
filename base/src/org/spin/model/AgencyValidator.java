@@ -1064,6 +1064,7 @@ public class AgencyValidator implements ModelValidator
             inoutLine.setC_UOM_ID(oLine.getC_UOM_ID());
             inoutLine.setM_AttributeSetInstance_ID(oLine.getM_AttributeSetInstance_ID());
             inoutLine.setM_Warehouse_ID(oLine.getM_Warehouse_ID());
+            inoutLine.setUser1_ID(oLine.getUser1_ID());//Solop. Nicolas Sarlabos. 5/7/2021. #16333.
 
             MWarehouse warehouse = (MWarehouse)oLine.getM_Warehouse();
 
