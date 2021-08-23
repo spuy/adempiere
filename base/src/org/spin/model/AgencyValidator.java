@@ -1188,9 +1188,10 @@ public class AgencyValidator implements ModelValidator
 				//	find all purchase order of pre-purchase
 				MOrder preOrder = new Query(sourceOrder.getCtx(), I_C_Order.Table_Name, "DocStatus = 'CO' "
 						+ "AND C_ProjectPhase_ID = ? "
+						+ "AND AD_Org_ID = ? "
 						+ "AND IsSOTrx = '" + (sourceOrder.isSOTrx()? "Y": "N") + "' "
 						+ "AND EXISTS(SELECT 1 FROM C_DocType dt WHERE dt.C_DocType_ID = C_Order.C_DocType_ID AND dt.IsPreOrder = 'Y')", sourceOrder.get_TrxName())
-						.setParameters(projectPhaseId)
+						.setParameters(projectPhaseId, sourceOrder.getAD_Org_ID())
 						.first();
 				//	Validate
 				if(preOrder != null
