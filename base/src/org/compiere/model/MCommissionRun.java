@@ -464,7 +464,14 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 				//	Set Max Percentage			
 				//	C_OrderLine_ID, C_InvoiceLine_ID,
 				commissionDetail.setLineIDs(orderLineId, invoiceLineId);
-				
+
+				if (commissionType.get_ValueAsBoolean("IsUpdateComplementaryColumns")) {
+					int mInOutLine_id = rs.getInt("IOL_M_InOutLine_ID");
+					if (mInOutLine_id > 0) {
+						commissionDetail.set_Value("M_InOutLine_ID", mInOutLine_id);
+					}
+				}
+
 				//	Reference, Info,
 				if (!Util.isEmpty(reference)) {
 					commissionDetail.setReference(Msg.translate(language, "Payment") + "_" + Msg.translate(language, "Invoice") + ": " + reference);
