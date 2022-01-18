@@ -1842,7 +1842,15 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 			return;
 		}
 		GregorianCalendar cal = new GregorianCalendar(Language.getLoginLanguage().getLocale());
-		cal.setTimeInMillis(getDateDoc().getTime());
+
+		// Solop Uruguay - #17310 - 18/01/2022 - Raul Capecce
+		long timestamp = getDateDoc().getTime();
+		try {
+			timestamp = new MOrder(getCtx(), get_ValueAsInt("C_Order_ID"), get_TrxName()).getDateOrdered().getTime();
+		} catch (Exception ignore) { }
+		// Solop Uruguay - #17310 - End
+
+		cal.setTimeInMillis(timestamp);
 		cal.set(Calendar.HOUR_OF_DAY, 0);
 		cal.set(Calendar.MINUTE, 0);
 		cal.set(Calendar.SECOND, 0);
