@@ -581,6 +581,7 @@ public class AgencyValidator implements ModelValidator
 			reverseOrder.setDocumentNo(null);
 			reverseOrder.setDateOrdered(currentTimestamp);
 			reverseOrder.setDatePromised(currentTimestamp);
+			reverseOrder.setDateAcct(currentTimestamp);
 			reverseOrder.setPOReference(mOrder.getDocumentNo());
 			reverseOrder.addDescription(Msg.parseTranslation(mOrder.getCtx(), "@Generated@ [@C_Order_ID@ " + mOrder.getDocumentNo()) + "]");
 			reverseOrder.setDocStatus(MOrder.DOCSTATUS_Drafted);
