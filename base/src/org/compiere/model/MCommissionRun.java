@@ -386,14 +386,16 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 		try {
 			pstmt = DB.prepareStatement(sql, get_TrxName());
 			pstmt.setInt(1, getAD_Client_ID());
-		pstmt.setTimestamp(2, getStartDate());
-			pstmt.setTimestamp(3, getEndDate());
-            if (commission.getDocBasisType().equals(MCommission.DOCBASISTYPE_Receipt)
-					&& commission.isTotallyPaid()){
-            	// Last payment must be within commission period 
-                pstmt.setTimestamp(4, getStartDate());
-                pstmt.setTimestamp(5, getEndDate());
-            }
+			if (!"U".equalsIgnoreCase(commission.getFrequencyType())) {
+				pstmt.setTimestamp(2, getStartDate());
+				pstmt.setTimestamp(3, getEndDate());
+				if (commission.getDocBasisType().equals(MCommission.DOCBASISTYPE_Receipt)
+						&& commission.isTotallyPaid()) {
+					// Last payment must be within commission period
+					pstmt.setTimestamp(4, getStartDate());
+					pstmt.setTimestamp(5, getEndDate());
+				}
+			}
 			rs = pstmt.executeQuery();
 			while (rs.next()) {
 				String columnName = getColumnName("C_InvoiceLine_ID", commissionType);
@@ -896,8 +898,11 @@ public class MCommissionRun extends X_C_CommissionRun implements DocAction, DocO
 			if(Util.isEmpty(columnName)) {
 				throw new AdempiereException("@C_CommissionType_ID@ @DateDoc@ @AD_Column_ID@ @NotFound@");
 			}
-			sqlWhere.append(" AND ").append(columnName).append(">=?");
-			sqlWhere.append(" AND ").append(columnName).append("<=?");
+			if (!"U".equalsIgnoreCase(commission.getFrequencyType())) {
+
+				sqlWhere.append(" AND ").append(columnName).append(">=?");
+				sqlWhere.append(" AND ").append(columnName).append("<=?");
+			}
 		}
 		//	For Forecast
 		if(MCommission.DOCBASISTYPE_ForecastVsInvoice.equals(commission.getDocBasisType())) {	//	For Invoices
