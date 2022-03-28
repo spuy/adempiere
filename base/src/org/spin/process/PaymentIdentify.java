@@ -18,19 +18,15 @@
 package org.spin.process;
 
 import org.adempiere.exceptions.AdempiereException;
-import org.compiere.model.I_C_Payment;
-import org.compiere.model.MAllocationHdr;
-import org.compiere.model.MAllocationLine;
-import org.compiere.model.MBPartner;
-import org.compiere.model.MOrgInfo;
-import org.compiere.model.MPayment;
-import org.compiere.model.PO;
-import org.compiere.model.Query;
+import org.adempiere.exceptions.PeriodClosedException;
+import org.compiere.model.*;
 import org.compiere.process.DocAction;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
+import org.compiere.util.TimeUtil;
 
 import java.math.RoundingMode;
+import java.sql.Timestamp;
 
 /** Generated Process for (Identify Payment)
  *  @author ADempiere (generated) 
@@ -122,8 +118,21 @@ public class PaymentIdentify extends PaymentIdentifyAbstract {
 		reversePayment.setIsReceipt(!unidentifiedPayment.isReceipt());
 		reversePayment.setPayAmt(reversePayment.getPayAmt());
 		//Solop. Nicolas Sarlabos. 22/04/2021. #15850.
-		reversePayment.setDateTrx(identifiedPayment.getDateTrx());
-		reversePayment.setDateAcct(identifiedPayment.getDateAcct());
+		Timestamp dateTrx = identifiedPayment.getDateTrx();
+		Timestamp dateAcct = identifiedPayment.getDateAcct();
+
+		try
+		{
+			MPeriod.testPeriodOpen(getCtx(), identifiedPayment.getDateAcct(), identifiedPayment.getC_DocType_ID(), identifiedPayment.getAD_Org_ID());
+		}
+		catch (PeriodClosedException periodClosedException)
+		{
+			dateTrx = TimeUtil.trunc(new Timestamp (System.currentTimeMillis()), TimeUtil.TRUNC_DAY);
+			dateAcct = TimeUtil.trunc(new Timestamp (System.currentTimeMillis()), TimeUtil.TRUNC_DAY);
+		}
+
+		reversePayment.setDateTrx(dateTrx);
+		reversePayment.setDateAcct(dateAcct);
 		//Fin #15850.
 		//	Get from organization
 		MOrgInfo organizationInfo = MOrgInfo.get(getCtx(), reversePayment.getAD_Org_ID(), get_TrxName());
@@ -151,7 +160,19 @@ public class PaymentIdentify extends PaymentIdentifyAbstract {
 		MAllocationHdr allocationHdr = new MAllocationHdr (getCtx(), false, getDateTrx(), unidentifiedPayment.getC_Currency_ID(),
 				Msg.translate(getCtx(), "C_Payment_ID")	+ ": " + reversePayment.getDocumentNo(), get_TrxName());
 		allocationHdr.setAD_Org_ID(identifiedPayment.getAD_Org_ID());
-		allocationHdr.setDateAcct(identifiedPayment.getDateAcct());
+
+		Timestamp dateAcct = identifiedPayment.getDateAcct();
+
+		try
+		{
+			MPeriod.testPeriodOpen(getCtx(), identifiedPayment.getDateAcct(), identifiedPayment.getC_DocType_ID(), identifiedPayment.getAD_Org_ID());
+		}
+		catch (PeriodClosedException periodClosedException)
+		{
+			dateAcct = TimeUtil.trunc(new Timestamp (System.currentTimeMillis()), TimeUtil.TRUNC_DAY);
+		}
+
+		allocationHdr.setDateAcct(dateAcct);
 		allocationHdr.saveEx(get_TrxName());
 
 		//	Original Allocation
