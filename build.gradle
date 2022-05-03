@@ -445,7 +445,7 @@ compileJava {
 
 application {
     mainClass = 'org.compiere.Adempiere'
-    applicationDefaultJvmArgs = ["-DPropertyFile=../../../AdempiereProperties/AD_trunk.properties"]
+    applicationDefaultJvmArgs = ["-DPropertyFile=../../../AdempiereProperties/AD_trunk.properties","-Dsun.awt.disablegrab=true"]
 }
 
 test {
