@@ -1254,8 +1254,15 @@ public class AgencyValidator implements ModelValidator
 						reverseOrder.saveEx();
 
 						DB.executeUpdateEx("update c_order set ad_org_id = " + sourceOrder.getAD_Org_ID() + " where c_order_id = " + reverseOrder.get_ID(), sourceOrder.get_TrxName());
-						DB.executeUpdateEx("update c_order set user1_id = " + sourceOrder.getUser1_ID() + ", user3_id = " + sourceOrder.getUser3_ID() +
-								" where c_order_id = " + reverseOrder.get_ID(), sourceOrder.get_TrxName());
+
+						if(sourceOrder.getUser1_ID() > 0){
+							DB.executeUpdateEx("update c_order set user1_id = " + sourceOrder.getUser1_ID() + " where c_order_id = " + reverseOrder.get_ID(), sourceOrder.get_TrxName());
+						}
+
+						if(sourceOrder.getUser3_ID() > 0){
+							DB.executeUpdateEx("update c_order set user3_id = " + sourceOrder.getUser3_ID() + " where c_order_id = " + reverseOrder.get_ID(), sourceOrder.get_TrxName());
+						}
+
 						DB.executeUpdateEx("update c_order set link_order_id = null where c_order_id = " + reverseOrder.get_ID(), sourceOrder.get_TrxName());//Openup. Nicolas Sarlabos. 28/09/2020. #14716.
 						//	Add Line
 						MOrderLine preOrderLine = preOrder.getLines(true, null)[0];
