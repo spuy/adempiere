@@ -104,6 +104,36 @@ public class X_AD_AppSupport extends PO implements I_AD_AppSupport, I_Persistent
 	public static final String APPLICATIONTYPE_MessageQueue = "MQS";
 	/** WebDav Application = WDV */
 	public static final String APPLICATIONTYPE_WebDavApplication = "WDV";
+	/** Social Media = SMN */
+	public static final String APPLICATIONTYPE_SocialMedia = "SMN";
+	/** Cache Server Provider = CSP */
+	public static final String APPLICATIONTYPE_CacheServerProvider = "CSP";
+	/** EMail = EMA */
+	public static final String APPLICATIONTYPE_EMail = "EMA";
+	/** Notes = NTE */
+	public static final String APPLICATIONTYPE_Notes = "NTE";
+	/** Twitter = STW */
+	public static final String APPLICATIONTYPE_Twitter = "STW";
+	/** Facebook = SFA */
+	public static final String APPLICATIONTYPE_Facebook = "SFA";
+	/** Instagram = SIG */
+	public static final String APPLICATIONTYPE_Instagram = "SIG";
+	/** Skype = SSK */
+	public static final String APPLICATIONTYPE_Skype = "SSK";
+	/** LinkedIn = SIN */
+	public static final String APPLICATIONTYPE_LinkedIn = "SIN";
+	/** SnapChat = SSN */
+	public static final String APPLICATIONTYPE_SnapChat = "SSN";
+	/** Telegram = STG */
+	public static final String APPLICATIONTYPE_Telegram = "STG";
+	/** WhatsApp = SWH */
+	public static final String APPLICATIONTYPE_WhatsApp = "SWH";
+	/** YouTube = SYT */
+	public static final String APPLICATIONTYPE_YouTube = "SYT";
+	/** Discord = SDC */
+	public static final String APPLICATIONTYPE_Discord = "SDC";
+	/** Open ID Connect Authentication = OIA */
+	public static final String APPLICATIONTYPE_OpenIDConnectAuthentication = "OIA";
 	/** Set Application Type.
 		@param ApplicationType 
 		Application Type, used for identify a Application Type like Message Queue

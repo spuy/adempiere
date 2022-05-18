@@ -49,6 +49,8 @@ import org.compiere.util.CLogger;
 import org.compiere.util.Env;
 import org.compiere.util.Language;
 import org.zkoss.web.Attributes;
+import org.spin.util.support.authentication.OpenIDUtil;
+import org.zkforge.keylistener.Keylistener;
 import org.zkoss.zk.au.Command;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.Executions;
@@ -67,6 +69,15 @@ import org.zkoss.zk.ui.sys.ExecutionsCtrl;
 import org.zkoss.zk.ui.sys.SessionCtrl;
 import org.zkoss.zk.ui.sys.Visualizer;
 import org.zkoss.zul.Window;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  *
@@ -124,24 +135,25 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
 
     public void onCreate()
     {
-        this.getPage().setTitle(ThemeManager.getBrowserTitle());
+		this.getPage().setTitle(ThemeManager.getBrowserTitle());
 
-        Properties ctx = Env.getCtx();
-        langSession = Env.getContext(ctx, Env.LANGUAGE);
-        SessionManager.setSessionApplication(this);
-        Session session = Executions.getCurrent().getDesktop().getSession();
+		Properties ctx = Env.getCtx();
+		langSession = Env.getContext(ctx, Env.LANGUAGE);
+		SessionManager.setSessionApplication(this);
+		Session session = Executions.getCurrent().getDesktop().getSession();
 
-        @SuppressWarnings("unchecked")
+		@SuppressWarnings("unchecked")
 		Map<String, Object>map = (Map<String, Object>) session.getAttribute(SAVED_CONTEXT);
-        session.removeAttribute(SAVED_CONTEXT);
-        if (map != null && !map.isEmpty())
-        {
-        	onChangeRole(map);
-        	return;
-        }
+		session.removeAttribute(SAVED_CONTEXT);
+		if (map != null && !map.isEmpty())
+		{
+			onChangeRole(map);
+			return;
+		}
 
-        if (session.getAttribute(SessionContextListener.SESSION_CTX) == null || !SessionManager.isUserLoggedIn(ctx))
-        {
+		int userId = Env.getAD_User_ID(Env.getCtx());
+
+		if (userId > 0 && !SessionManager.existsExecutionCarryOver(httpSession.getId())) {
             loginDesktop = new WLogin(this);
             loginDesktop.createPart(this.getPage());
         }
@@ -165,9 +177,14 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
 		Properties properties = (Properties) map.get("context");
 		SessionManager.setSessionApplication(this);
 		loginDesktop = new WLogin(this);
-		loginDesktop.createPart(this.getPage());
-		loginDesktop.setTypedPassword(typedPassword);
-		loginDesktop.changeRole(locale, properties);
+		loginDesktop.setTypedPassword(SessionManager.getUserAuthentication(getId()));
+		SessionManager.removeUserAuthentication(getId());
+		Properties newContext =  (Properties) Env.getCtx().clone();
+		Language language = Env.getLanguage(Env.getCtx());
+		if (userId > 0)
+			loginDesktop.externalAuthentication(language.getLocale(), Env.getCtx(), MUser.get(Env.getCtx(), userId));
+		else
+			loginDesktop.changeRole(language.getLocale(),newContext);
 	}
 
     /* (non-Javadoc)
@@ -510,5 +527,28 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
 		}
 
 		return session;
+	}
+
+	/**
+	 * External Authentication
+	 * @return
+	 */
+	private boolean externalAuthentication() {
+
+		AtomicReference<Boolean> authenticated = new AtomicReference<>(false);
+		Optional<String> maybeCode = Optional.ofNullable(Executions.getCurrent().getParameter("code"));
+		Optional<String> maybeStatus = Optional.ofNullable(Executions.getCurrent().getParameter("state"));
+		maybeCode.ifPresent(code -> {
+			maybeStatus.ifPresent(state ->{
+				Optional<MUser> maybeUser = Optional.ofNullable(OpenIDUtil.getUserAuthenticated(code, state));
+				maybeUser.ifPresent(user -> {
+					Env.setContext(Env.getCtx(), Env.AD_USER_ID, user.get_ID());
+					authenticated.set(true);
+		        	OpenIDUtil.setErrorMessage(Env.getCtx(), "");
+				});
+				Executions.sendRedirect("index.zul");
+			});
+		});
+		return authenticated.get();
 	}
 }
