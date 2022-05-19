@@ -27,7 +27,6 @@ services:
       - "ADEMPIERE_DB_NAME=adempiere"
       - "ADEMPIERE_DB_PASSWORD=adempiere"
       - "ADEMPIERE_DB_ADMIN_PASSWORD=adempiere"
-      - "ADEMPIERE_DB_TYPE=oracleXE"
     depends_on:
       - adempiere.db
     networks:
