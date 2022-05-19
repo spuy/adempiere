@@ -1,0 +1,131 @@
+# This is a basic workflow to help you get started with Actions
+# This file was contributed by Carlos Parada and Yamel Senih from ERP Consultores y Asociados, C.A
+
+name: Publish Docker Images
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the develop branch
+  release:
+    types: 
+      - published
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  push_to_registry:
+    name: Push Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for publish to succeed
+        uses: lewagon/wait-on-check-action@v1.0.0
+        with:
+          ref: ${{ github.ref }}
+          check-name: 'publish'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
+
+      - name: Checkuot Project
+        uses: actions/checkout@v2
+      
+      # Get Adempiere Release from Active
+      - name: Get Adempiere Release
+        uses: wei/curl@v1
+        with:
+          args: -L $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/${{ github.event.release.tag_name }}/Adempiere_393LTS.tar.gz > Adempiere_393LTS.tar.gz
+
+      - name: Copy Adempiere Binary 
+        run: | 
+          cp Adempiere*.tar.gz docker/adempiere/
+          ls docker/adempiere/
+      
+      # Get Adempiere Postgres Database from Active
+      - name: Get Adempiere Postgres Release
+        uses: wei/curl@v1
+        with:
+          args: -L $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/${{ github.event.release.tag_name }}/Adempiere_pg.jar > Adempiere_pg.jar
+
+      - name: 'Unzip artifact'
+        run: unzip Adempiere_pg.jar
+      
+      - name: Copy Adempiere Binary 
+        run: cp Adempiere*.dmp docker/adempiere-postgres
+      
+      # Get Apache Tomcat Binary
+      - name: Get Binary Application Apache Tomcat
+        uses: wei/curl@v1
+        with:
+          args: -L https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.63/bin/apache-tomcat-9.0.63.tar.gz > docker/adempiere/apache-tomcat.tar.gz
+          
+      # Login on DockerHub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      #Build Full Adempiere Postgres Database
+      - name: Build and Push Adempiere Postgres Image  
+        uses: docker/build-push-action@v2
+        with:
+          context: docker/adempiere-postgres
+          file: docker/adempiere-postgres/Dockerfile
+          push: true
+          tags: | 
+            ${{ secrets.DOCKER_REPO_POSTGRES }}:14-${{ github.event.release.tag_name }}
+            ${{ secrets.DOCKER_REPO_POSTGRES }}:latest
+          build-args: |
+            POSTGRES_RELEASE=14
+            ADEMPIERE_DB=Adempiere_pg.dmp
+
+      #Build Alpine Adempiere Postgres Database
+      - name: Build and push Docker image for Adempiere Based in Wildfly
+        uses: docker/build-push-action@v2
+        with:
+          context: docker/adempiere-postgres
+          file: docker/adempiere-postgres/Dockerfile
+          push: true
+          tags: | 
+            ${{ secrets.DOCKER_REPO_POSTGRES }}:14-alpine
+            ${{ secrets.DOCKER_REPO_POSTGRES }}:14-alpine-${{ github.event.release.tag_name }}
+          build-args: |
+            POSTGRES_RELEASE=14-alpine
+            ADEMPIERE_DB=Adempiere_pg.dmp
+            
+            
+      #Build Full Adempiere Based Tomcat Image
+      - name: Build and push Docker image for Adempiere Based in Tomcat
+        uses: docker/build-push-action@v2
+        with:
+          context: docker/adempiere
+          file: docker/adempiere/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_REPO_ADEMPIERE_BASE }}:tomcat-${{ github.event.release.tag_name }}
+            ${{ secrets.DOCKER_REPO_ADEMPIERE_BASE }}:tomcat
+            ${{ secrets.DOCKER_REPO_ADEMPIERE_BASE }}:latest
+          build-args: |
+            ADEMPIERE_APPS=apache-tomcat.tar.gz
+            ADEMPIERE_BINARY=Adempiere_393LTS.tar.gz
+            ADEMPIERE_APPS_TYPE=tomcat
+            JDK_RELEASE=11-jdk
+
+      # Setting Dockerfile for Alpine Image      
+      - name: Set Alpine Dockerfile 
+        run: |
+          cp docker/adempiere/Dockerfile docker/adempiere/Dockerfile.alpine
+          sed -i "s|/opt/setting.sh|apk add --no-cache fontconfig ttf-dejavu \&\& \\\ \n        rm /opt/Adempiere/data/Adempiere* \&\& \\\ \n        /opt/setting.sh|g" docker/adempiere/Dockerfile.alpine
+
+      #Build Alpine Adempiere Based Tomcat Image
+      - name: Build and push Alpine Docker image for Adempiere Based in Tomcat
+        uses: docker/build-push-action@v2
+        with:
+          context: docker/adempiere
+          file: docker/adempiere/Dockerfile.alpine
+          push: true
+          tags: | 
+            ${{ secrets.DOCKER_REPO_ADEMPIERE_BASE }}:tomcat-alpine-${{ github.event.release.tag_name }}
+            ${{ secrets.DOCKER_REPO_ADEMPIERE_BASE }}:tomcat-alpine
+          build-args: |
+            ADEMPIERE_APPS=apache-tomcat-9.0.62.tar.gz
+            ADEMPIERE_BINARY=Adempiere_393LTS.tar.gz
+            ADEMPIERE_APPS_TYPE=tomcat
+            JDK_RELEASE=11-jdk-alpine
