@@ -1478,5 +1478,14 @@
     </orderEntry>
     <orderEntry type="library" name="org.scalatest:scalatest_2.12:3.0.5" level="project" />
     <orderEntry type="library" name="scala-sdk-2.12.8" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/tools/lib/vavr-1.0.0-alpha-4.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
