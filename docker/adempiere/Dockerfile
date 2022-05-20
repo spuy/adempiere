@@ -30,8 +30,8 @@ ADD $ADEMPIERE_APPS /opt/binaryapp/
 COPY setting.sh /opt/
 COPY entrypoint.sh /opt/
 
-RUN groupadd adempiere && \
-	useradd -r -u 1001 -g adempiere adempiere && \
+RUN addgroup adempiere && \
+	adduser --disabled-password --gecos ""  --ingroup adempiere --no-create-home adempiere && \
 	chown -R adempiere $ADEMPIERE_HOME && \
 	chown -R adempiere /opt/binaryapp/ && \
 	/opt/setting.sh

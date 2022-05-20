@@ -5,7 +5,7 @@ then
 	ls
     createuser -U postgres adempiere -d -s -l
     echo "adempiere user created"
-    psql -U postgres -tAc "alter user adempiere password '$ADEMPERE_PASSWORD';"
+    psql -U postgres -tAc "alter user adempiere password '$ADEMPIERE_PASSWORD';"
     echo "password for adempiere user created"
     createdb -U adempiere $DB_NAME
     echo "Database $DB_NAME created"

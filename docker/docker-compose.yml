@@ -14,10 +14,9 @@ services:
     environment:
       - POSTGRES_PASSWORD=adempiere
       - DB_NAME=adempiere
-      - ADEMPERE_PASSWORD=adempiere
+      - ADEMPIERE_PASSWORD=adempiere
     networks:
       - adempiere
-
   adempiere.app:
     image: adempiere.app
     ports:

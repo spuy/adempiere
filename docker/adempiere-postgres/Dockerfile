@@ -6,7 +6,7 @@ ARG ADEMPIERE_DB=Adempiere_pg.dmp
 
 ENV ADEMPIERE_DB $ADEMPIERE_DB
 ENV DB_NAME adempiere
-ENV ADEMPERE_PASSWORD adempiere
+ENV ADEMPIERE_PASSWORD adempiere
 
 ADD --chown=postgres $ADEMPIERE_DB /tmp
 COPY --chown=postgres  initdb.sh /docker-entrypoint-initdb.d
