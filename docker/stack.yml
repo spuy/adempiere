@@ -1,32 +1,22 @@
-version: "3.7"
-
-networks:
-  adempiere:
-
-volumes:
-  pgdata:
+version: '3.1'
 
 services:
-  adempiere.db:
+
+  database:
     image: solopcloud/adempiere-postgres
-    volumes:
-      - "pgdata:/var/lib/postgresql/data"
+    restart: always
     environment:
       - POSTGRES_PASSWORD=adempiere
       - DB_NAME=adempiere
       - ADEMPIERE_PASSWORD=adempiere
-    networks:
-      - adempiere
-  adempiere.app:
+
+  application:
     image: solopcloud/adempiere-base
-    ports:
-      - "8888:8888"
+    restart: always
     environment:
-      - "ADEMPIERE_DB_HOST=adempiere.db"
+      - "ADEMPIERE_DB_HOST=database"
       - "ADEMPIERE_DB_NAME=adempiere"
       - "ADEMPIERE_DB_PASSWORD=adempiere"
       - "ADEMPIERE_DB_ADMIN_PASSWORD=adempiere"
-    depends_on:
-      - adempiere.db
-    networks:
-      - adempiere
+    ports:
+      - 8888:8888
