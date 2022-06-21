@@ -129,12 +129,12 @@ public class MChangeLog extends X_AD_ChangeLog
 	 */
 	public MChangeLog (Properties ctx, 
 			int AD_ChangeLog_ID, String TrxName, int AD_Session_ID, 
-			int AD_Table_ID, int AD_Column_ID, int Record_ID,
+			int AD_Table_ID, int AD_Column_ID, int Record_ID, String Record_UUID,
 			int AD_Client_ID, int AD_Org_ID,
 			Object OldValue, Object NewValue)
 	{
 		this(ctx, AD_ChangeLog_ID, TrxName, AD_Session_ID, AD_Table_ID,
-				AD_Column_ID, Record_ID, AD_Client_ID, AD_Org_ID, OldValue,
+				AD_Column_ID, Record_ID, Record_UUID, AD_Client_ID, AD_Org_ID, OldValue,
 				NewValue, (String) null /*event*/ );
 	}	// MChangeLog
 
@@ -154,7 +154,7 @@ public class MChangeLog extends X_AD_ChangeLog
 	 */
 	public MChangeLog (Properties ctx, 
 		int AD_ChangeLog_ID, String TrxName, int AD_Session_ID, 
-		int AD_Table_ID, int AD_Column_ID, int Record_ID,
+		int AD_Table_ID, int AD_Column_ID, int Record_ID, String Record_UUID,
 		int AD_Client_ID, int AD_Org_ID,
 		Object OldValue, Object NewValue, String event)
 	{
@@ -171,7 +171,9 @@ public class MChangeLog extends X_AD_ChangeLog
 		//
 		setAD_Table_ID (AD_Table_ID);
 		setAD_Column_ID (AD_Column_ID);
-		setRecord_ID (Record_ID);
+		if(Record_ID > 0){
+			setRecord_ID (Record_ID);
+		} else set_Value("Record_UUID", Record_UUID);
 		//
 		setClientOrg (AD_Client_ID, AD_Org_ID);
 		//

@@ -2586,7 +2586,7 @@ public abstract class PO
 
 			//	Change Log	- Only
 			if (session != null
-				&& m_IDs.length == 1
+				//&& m_IDs.length == 1
 				&& p_info.isAllowLogging(i)		//	logging allowed
 				&& !p_info.isEncrypted(i)		//	not encrypted
 				&& !p_info.isVirtualColumn(i)	//	no virtual column
@@ -2600,10 +2600,22 @@ public abstract class PO
 				if (newV != null && newV == Null.NULL)
 					newV = null;
 				// change log on update
-				MChangeLog cLog = session.changeLog (
-					m_trxName, AD_ChangeLog_ID,
-					p_info.getAD_Table_ID(), p_info.getColumn(i).AD_Column_ID,
-					get_ID(), getAD_Client_ID(), getAD_Org_ID(), oldV, newV, MChangeLog.EVENTCHANGELOG_Update);
+				MChangeLog cLog = null;
+				if(m_IDs.length == 1){
+					cLog = session.changeLog (
+							m_trxName, AD_ChangeLog_ID,
+							p_info.getAD_Table_ID(), p_info.getColumn(i).AD_Column_ID,
+							get_ID(), null, getAD_Client_ID(), getAD_Org_ID(), oldV, newV, MChangeLog.EVENTCHANGELOG_Update);
+				} else {
+					MTable table = new MTable(getCtx(), p_info.getAD_Table_ID(), get_TrxName());
+					if(!table.isSingleKey()){
+						cLog = session.changeLog (
+								m_trxName, AD_ChangeLog_ID,
+								p_info.getAD_Table_ID(), p_info.getColumn(i).AD_Column_ID,
+								0, get_UUID(), getAD_Client_ID(), getAD_Org_ID(), oldV, newV, MChangeLog.EVENTCHANGELOG_Update);
+					}
+				}
+
 				if (cLog != null)
 					AD_ChangeLog_ID = cLog.getAD_ChangeLog_ID();
 			}
@@ -2842,23 +2854,31 @@ public abstract class PO
 			//	Change Log	- Only
 			String insertLog = MSysConfig.getValue("SYSTEM_INSERT_CHANGELOG", "Y", getAD_Client_ID());
 			if (   session != null
-				&& m_IDs.length == 1
+				//&& m_IDs.length == 1
 				&& p_info.isAllowLogging(i)		//	logging allowed
 				&& !p_info.isEncrypted(i)		//	not encrypted
 				&& !p_info.isVirtualColumn(i)	//	no virtual column
 				&& !"Password".equals(columnName)
 				&& (insertLog.equalsIgnoreCase("Y")
 						|| (insertLog.equalsIgnoreCase("K") && p_info.getColumn(i).IsKey))
-				)
-				{
-					// change log on new
-					MChangeLog cLog = session.changeLog (
+			) {
+				// change log on new
+				MChangeLog cLog;
+				if (m_IDs.length == 1) {
+					cLog = session.changeLog(
 							m_trxName, AD_ChangeLog_ID,
 							p_info.getAD_Table_ID(), p_info.getColumn(i).AD_Column_ID,
-							get_ID(), getAD_Client_ID(), getAD_Org_ID(), null, value, MChangeLog.EVENTCHANGELOG_Insert);
-					if (cLog != null)
-						AD_ChangeLog_ID = cLog.getAD_ChangeLog_ID();
+							get_ID(), null, getAD_Client_ID(), getAD_Org_ID(), null, value, MChangeLog.EVENTCHANGELOG_Insert);
+				} else {
+					cLog = session.changeLog(
+							m_trxName, AD_ChangeLog_ID,
+							p_info.getAD_Table_ID(), p_info.getColumn(i).AD_Column_ID,
+							0, get_UUID(), getAD_Client_ID(), getAD_Org_ID(), null, value, MChangeLog.EVENTCHANGELOG_Insert);
+
 				}
+				if (cLog != null)
+					AD_ChangeLog_ID = cLog.getAD_ChangeLog_ID();
+			}
 
 		}
 		//	Custom Columns
@@ -3140,7 +3160,7 @@ public abstract class PO
 								MChangeLog cLog = session.changeLog (
 									m_trxName != null ? m_trxName : localTrxName, AD_ChangeLog_ID,
 									AD_Table_ID, p_info.getColumn(i).AD_Column_ID,
-									Record_ID, getAD_Client_ID(), getAD_Org_ID(), value, null, MChangeLog.EVENTCHANGELOG_Delete);
+									Record_ID, null, getAD_Client_ID(), getAD_Org_ID(), value, null, MChangeLog.EVENTCHANGELOG_Delete);
 								if (cLog != null)
 									AD_ChangeLog_ID = cLog.getAD_ChangeLog_ID();
 							}

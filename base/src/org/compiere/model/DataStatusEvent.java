@@ -86,6 +86,8 @@ public final class DataStatusEvent extends EventObject implements Serializable
 	/** Record ID				*/
 	public Object			Record_ID = null;
 
+	public Object			UUID = null;
+
 	/**
 	 *	Set Loaded Info
 	 *  @param loadedRows loaded rows

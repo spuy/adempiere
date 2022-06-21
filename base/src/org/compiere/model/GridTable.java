@@ -3292,6 +3292,7 @@ public class GridTable extends AbstractTableModel
 			Env.isAutoCommit(m_ctx, m_WindowNo), m_inserting);
 		dse.AD_Table_ID = m_AD_Table_ID;
 		dse.Record_ID = null;
+		dse.UUID = null;
 		return dse;
 	}   //  createDSE
 

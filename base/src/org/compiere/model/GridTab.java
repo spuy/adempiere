@@ -2134,6 +2134,7 @@ public class GridTab implements DataStatusListener, Evaluatee, Serializable
 		e.Updated = (Timestamp)getValue("Updated");
 		e.UpdatedBy = (Integer)getValue("UpdatedBy");
 		e.Record_ID = getValue(m_keyColumnName);
+		e.UUID = getValue("UUID");
 		//  Info
 		StringBuffer info = new StringBuffer();
 		StringBuffer tableInfo = new StringBuffer("SELECT * FROM " + getTableName());

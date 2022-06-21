@@ -170,8 +170,8 @@ public class RecordInfoController {
 				.append(Msg.translate(Env.getCtx(), "CreatedBy"))
 				.append(": ").append(user.getName())
 				.append(" - ").append(m_dateTimeFormat.format(dse.Created)).append("\n");
-			
-			if (!dse.Created.equals(dse.Updated) 
+
+			if (!dse.Created.equals(dse.Updated)
 				|| !dse.CreatedBy.equals(dse.UpdatedBy))
 			{
 				if (!dse.CreatedBy.equals(dse.UpdatedBy))
@@ -184,7 +184,7 @@ public class RecordInfoController {
 			if (dse.Info != null && dse.Info.length() > 0) {
 				m_info.append("\n").append(dse.Info);
 			}
-			
+
 			//	Title
 			if (dse.AD_Table_ID != 0)
 			{
@@ -197,19 +197,29 @@ public class RecordInfoController {
 				m_Record_ID = ((Integer)dse.Record_ID).intValue();
 			else
 				log.info("dynInit - Invalid Record_ID=" + dse.Record_ID);
+
+			UUID = (String) dse.UUID;
+
 		}
 		//	Valid Record Identifier
-		if (m_Record_ID == 0)
+		if (m_Record_ID <= 0 && UUID == null)
 			return;
 
 		//	Only Client Preference can view Change Log
 		if (!MRole.PREFERENCETYPE_Client.equals(MRole.getDefault().getPreferenceType()))
 			return;
-		
+
 		//	Data
+		String whereRecordID = "";
+		if (m_Record_ID > 0) {
+			whereRecordID = "AND Record_ID= " + m_Record_ID + " ";
+		} else if (UUID != null && !UUID.equalsIgnoreCase("")) {
+			whereRecordID = "AND Record_UUID= '" + UUID + "' ";
+		}
+
 		String sql = "SELECT AD_Column_ID, Updated, UpdatedBy, OldValue, NewValue "
 			+ "FROM AD_ChangeLog "
-			+ "WHERE AD_Table_ID=? AND Record_ID=? "
+			+ "WHERE AD_Table_ID=? " + whereRecordID
 			+ (m_AD_Column_ID != 0? "AND AD_Column_ID=? ": "")
 			+ "ORDER BY Updated DESC";
 		PreparedStatement pstmt = null;
@@ -217,10 +227,9 @@ public class RecordInfoController {
 		{
 			pstmt = DB.prepareStatement (sql, null);
 			pstmt.setInt (1, m_AD_Table_ID);
-			pstmt.setInt (2, m_Record_ID);
 			//	Add support to column
 			if(m_AD_Column_ID != 0)
-				pstmt.setInt (3, m_AD_Column_ID);
+				pstmt.setInt (2, m_AD_Column_ID);
 			//	
 			ResultSet rs = pstmt.executeQuery ();
 			while (rs.next ())
