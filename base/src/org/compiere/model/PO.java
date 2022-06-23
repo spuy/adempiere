@@ -3142,7 +3142,7 @@ public abstract class PO
 				if( p_info.isChangeLog())
 				{
 					//	Change Log
-					if (session != null && m_IDs.length == 1)
+					if (session != null)
 					{
 						int AD_ChangeLog_ID = 0;
 						int size = get_ColumnCount();
@@ -3157,10 +3157,19 @@ public abstract class PO
 								)
 							{
 								// change log on delete
-								MChangeLog cLog = session.changeLog (
-									m_trxName != null ? m_trxName : localTrxName, AD_ChangeLog_ID,
-									AD_Table_ID, p_info.getColumn(i).AD_Column_ID,
-									Record_ID, null, getAD_Client_ID(), getAD_Org_ID(), value, null, MChangeLog.EVENTCHANGELOG_Delete);
+								MChangeLog cLog = null;
+								if (m_IDs.length == 1) {
+									cLog = session.changeLog(
+											m_trxName != null ? m_trxName : localTrxName, AD_ChangeLog_ID,
+											AD_Table_ID, p_info.getColumn(i).AD_Column_ID,
+											Record_ID, null, getAD_Client_ID(), getAD_Org_ID(), value, null, MChangeLog.EVENTCHANGELOG_Delete);
+								} else if (m_IDs.length > 1){
+									cLog = session.changeLog(
+											m_trxName != null ? m_trxName : localTrxName, AD_ChangeLog_ID,
+											AD_Table_ID, p_info.getColumn(i).AD_Column_ID,
+											0, get_UUID(), getAD_Client_ID(), getAD_Org_ID(), value, null, MChangeLog.EVENTCHANGELOG_Delete);
+								}
+
 								if (cLog != null)
 									AD_ChangeLog_ID = cLog.getAD_ChangeLog_ID();
 							}
