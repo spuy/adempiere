@@ -674,3 +674,11 @@ div.z-listbox-pgi-b, div.z-tree-pgi-b, div.z-grid-pgi-b  {
 .z-datebox-readonly + span {
 opacity: 0.5;
 }
+
+.desktop-header {
+  background-color: #262c3b
+}
+
+.login-window {
+  background-color: #262c3b;
+}
