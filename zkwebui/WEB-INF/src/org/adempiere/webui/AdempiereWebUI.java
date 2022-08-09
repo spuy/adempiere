@@ -86,7 +86,7 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
 	 */
 	private static final long serialVersionUID = 3744725245132180915L;
 
-	public static final String APP_NAME = "ADempiere";
+	public static final String APP_NAME = "Solop";
 
     public static final String UID          = "3.5";
 
