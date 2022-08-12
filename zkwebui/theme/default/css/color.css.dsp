@@ -24,7 +24,7 @@
 
 <c:set var="ColorWhite" value="#FFFFFF"/>
 <c:set var="ColorBGTree" value="#F7F7F7"/>
-<c:set var="ColorSeld" value="#0068c5"/>
+<c:set var="ColorSeld" value="#336b9b"/>
 <c:set var="ColorGray" value="#FFFFFF"/>
 <c:set var="ColorLightGray" value="#F0F0F0"/>
 <c:set var="ColorBorder" value="#999999"/>
@@ -113,7 +113,7 @@
 
 .z-tree-row-over *, .z-tree-row-over-seld *, .z-tree-row-seld * {
   color: #ffffff !important;
-  background-color: #1F9BDE !important;
+  background-color: #336b9b !important;
 }
 
 <%-- Logo position --%>
@@ -236,7 +236,7 @@ div.z-progressmeter {
 }
 
 .z-combobox-pp .z-combo-item-over {
-	background-color: ${ColorSeld};
+	background-color: ${ColorSeld} !important;
 }
 
 .z-combobox-pp .z-combo-item-seld .z-combo-item-text .z-combo-item-inner {
