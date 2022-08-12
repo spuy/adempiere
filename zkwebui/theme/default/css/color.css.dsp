@@ -107,7 +107,7 @@
   padding-bottom: 0px !important;
 }
 .z-tabpanels {
-  border-top: solid 1px #1f9bde !important;
+  border-top: solid 1px #336b9b !important;
 }
 <%-- Skyblue underline tabs - End --%>
 
