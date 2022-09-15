@@ -17,6 +17,7 @@
 package org.compiere.db;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Driver;
@@ -513,7 +514,7 @@ public class DB_Oracle implements AdempiereDatabase
         {
             try
             {
-                result = number.setScale(scale, BigDecimal.ROUND_HALF_UP);
+                result = number.setScale(scale, RoundingMode.HALF_UP);
             }
             catch (Exception e)
             {
@@ -575,7 +576,6 @@ public class DB_Oracle implements AdempiereDatabase
                 config.setPassword(connection.getDbPwd());
                 config.setConnectionTestQuery(DEFAULT_CONN_TEST_SQL);
                 config.setIdleTimeout(0);
-                config.setKeepaliveTime(30000);
                 config.setMinimumIdle(15);
                 config.setMaximumPoolSize(150);
                 config.setPoolName("AdempiereDS");

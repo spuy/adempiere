@@ -328,8 +328,6 @@ public interface I_C_PaySelectionLine
 	/** Get Financial Account	  */
 	public int getFM_Account_ID();
 
-	public org.spin.model.I_FM_Account getFM_Account() throws RuntimeException;
-
     /** Column name HR_Movement_ID */
     public static final String COLUMNNAME_HR_Movement_ID = "HR_Movement_ID";
 
@@ -338,8 +336,6 @@ public interface I_C_PaySelectionLine
 
 	/** Get Payroll Movement	  */
 	public int getHR_Movement_ID();
-
-	public org.eevolution.model.I_HR_Movement getHR_Movement() throws RuntimeException;
 
     /** Column name IsActive */
     public static final String COLUMNNAME_IsActive = "IsActive";

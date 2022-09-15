@@ -276,7 +276,7 @@ public class InvoicePrint extends SvrProcess
 				format.setTranslationLanguage(language);
 				//	query
 				MQuery query = new MQuery("C_Invoice_Header_v");
-				query.addRestriction("C_Invoice_ID", MQuery.EQUAL, new Integer(invoiceId));
+				query.addRestriction("C_Invoice_ID", MQuery.EQUAL, Integer.valueOf(invoiceId));
 
 				//	Engine
 				PrintInfo info = new PrintInfo(
@@ -313,8 +313,7 @@ public class InvoicePrint extends SvrProcess
 						.withText(message)
 						.addAttachment(attachment)
 						.withDescription(subject)
-						.withTableId(MInvoice.Table_ID)
-						.withRecordId(invoiceId);
+						.withEntity(MInvoice.Table_ID, invoiceId);
 					//	Add to queue
 					notifier.addToQueue();
 					count++;

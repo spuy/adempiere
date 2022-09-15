@@ -64,10 +64,10 @@ import org.compiere.util.TrxRunnable;
 import org.compiere.util.Util;
 import org.compiere.wf.MWorkflow;
 import org.eevolution.model.I_PP_Product_Planning;
-import org.eevolution.model.MDDNetworkDistribution;
-import org.eevolution.model.MDDNetworkDistributionLine;
-import org.eevolution.model.MDDOrder;
-import org.eevolution.model.MDDOrderLine;
+import org.eevolution.distribution.model.MDDNetworkDistribution;
+import org.eevolution.distribution.model.MDDNetworkDistributionLine;
+import org.eevolution.distribution.model.MDDOrder;
+import org.eevolution.distribution.model.MDDOrderLine;
 import org.eevolution.model.MPPMRP;
 import org.eevolution.model.MPPMRPDetail;
 import org.eevolution.model.MPPOrder;
@@ -980,7 +980,7 @@ public class MRP extends SvrProcess
 		// Check Order Pack
 		if (m_product_planning.getOrder_Pack().signum() > 0 && QtyPlanned.signum() > 0)
 		{
-			QtyPlanned = m_product_planning.getOrder_Pack().multiply(QtyPlanned.divide(m_product_planning.getOrder_Pack(), 0 , BigDecimal.ROUND_UP));
+			QtyPlanned = m_product_planning.getOrder_Pack().multiply(QtyPlanned.divide(m_product_planning.getOrder_Pack(), 0, RoundingMode.UP));
 		}
 		// Check Order Max                                                
 		if(QtyPlanned.compareTo(m_product_planning.getOrder_Max()) > 0 && m_product_planning.getOrder_Max().signum() > 0)
@@ -1027,7 +1027,7 @@ public class MRP extends SvrProcess
 			if (m_product_planning.getOrder_Policy().equals(X_PP_Product_Planning.ORDER_POLICY_FixedOrderQuantity))
 			{    
 				if (m_product_planning.getOrder_Qty().signum() != 0)
-					loops = (QtyPlanned.divide(m_product_planning.getOrder_Qty() , 0 , BigDecimal.ROUND_UP)).intValueExact();
+					loops = (QtyPlanned.divide(m_product_planning.getOrder_Qty(), 0, RoundingMode.UP)).intValueExact();
 				QtyPlanned = m_product_planning.getOrder_Qty();
 			}
 
@@ -1313,8 +1313,9 @@ public class MRP extends SvrProcess
 										.list();
 			for (MPPMRP mrp : mrpList)
 			{
+				MDDOrder distributionOrder = new MDDOrder(mrp.getCtx(), mrp.getDD_OrderLine_ID(), mrp.get_TrxName());
 				mrp.setDateOrdered(getToday());               
-				mrp.setDateOrdered(mrp.getDD_Order().getDateOrdered());  
+				mrp.setDateOrdered(distributionOrder.getDateOrdered());  
 				mrp.setDateStartSchedule(mrp.getDateOrdered());
 				mrp.setDatePromised(DemandDateStartSchedule);
 				mrp.setDateFinishSchedule(DemandDateStartSchedule);

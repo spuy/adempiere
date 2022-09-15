@@ -70,7 +70,7 @@ public class MClient extends X_AD_Client
 	 */
 	public static MClient get (Properties ctx, int AD_Client_ID)
 	{
-		Integer key = new Integer (AD_Client_ID);
+		Integer key = Integer.valueOf(AD_Client_ID);
 		MClient client = (MClient)s_cache.get(key);
 		if (client != null)
 			return client;
@@ -89,7 +89,7 @@ public class MClient extends X_AD_Client
 		List<MClient> list = new Query(ctx,I_AD_Client.Table_Name,null,null)
 		.list();
 		for(MClient client:list ){
-			s_cache.put (new Integer (client.getAD_Client_ID()), client);
+			s_cache.put(Integer.valueOf(client.getAD_Client_ID()), client);
 		}
 		MClient[] retValue = new MClient[list.size ()];
 		list.toArray (retValue);
@@ -486,36 +486,7 @@ public class MClient extends X_AD_Client
 	 */
 	public String testEMail()
 	{
-		if (getRequestEMail() == null || getRequestEMail().length() == 0)
-			return "No Request EMail for " + getName();
-		//
-		EMail email = createEMail (getRequestEMail(),
-			"Adempiere EMail Test", 
-			"Adempiere EMail Test: " + toString());
-		if (email == null)
-			return "Could not create EMail: " + getName();
-		try
-		{
-			String msg = email.send();
-			if (EMail.SENT_OK.equals (msg))
-			{
-				log.info("Sent Test EMail to " + getRequestEMail());
-				return "OK";
-			}
-			else
-			{
-				log.warning("Could NOT send Test EMail from "
-					+ getSMTPHost() + ": " + getRequestEMail()
-					+ " (" + getRequestUser()
-					+ ") to " + getRequestEMail() + ": " + msg);
-				return msg;
-			}
-		}
-		catch (Exception ex)
-		{
-			log.severe(getName() + " - " + ex.getLocalizedMessage());
-			return ex.getLocalizedMessage();
-		}
+		return EMail.validateMailDelivery(getCtx(), getRequestEMail(), getRequestUserPW(), getAD_EMailConfig_ID(), getName());
 	}	//	testEMail
 	
 	/**

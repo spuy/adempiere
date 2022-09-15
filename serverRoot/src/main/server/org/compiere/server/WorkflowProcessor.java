@@ -84,12 +84,22 @@ public class WorkflowProcessor extends AdempiereServer
 		//
 		int no = m_model.deleteLog();
 		m_summary.append("Logs deleted=").append(no);
-		//
-		MWorkflowProcessorLog pLog = new MWorkflowProcessorLog(m_model, m_summary.toString());
-		pLog.setReference("#" + String.valueOf(p_runCount) 
-			+ " - " + TimeUtil.formatElapsed(new Timestamp(p_startWork)));
-		pLog.saveEx();
+		if (m_model.get_TrxName() == null) {
+			Trx.run(this::addWorkflowProcessorLog);
+		} else {
+			addWorkflowProcessorLog(m_model.get_TrxName());
+		}
 	}	//	doWork
+
+	/**
+	 * Add Workflow Processor Log
+	 * @param trxName
+	 */
+	private void addWorkflowProcessorLog(String trxName) {
+		MWorkflowProcessorLog workflowProcessorLog = new MWorkflowProcessorLog(m_model, m_summary.toString(), trxName);
+		workflowProcessorLog.setReference("#" + p_runCount + " - " + TimeUtil.formatElapsed(new Timestamp(p_startWork)));
+		workflowProcessorLog.saveEx();
+	}
 
 	/**
 	 * 	Continue Workflow After Sleep
@@ -376,13 +386,13 @@ public class WorkflowProcessor extends AdempiereServer
 		
 		//	To Activity Owner
 		counter++;
-		list.add (new Integer(activity.getAD_User_ID()));
+		list.add(Integer.valueOf(activity.getAD_User_ID()));
 
 		//	To Process Owner
 		if (toProcess
 			&& process.getAD_User_ID() != activity.getAD_User_ID()) {
 			counter++;
-			list.add (new Integer(process.getAD_User_ID()));
+			list.add(Integer.valueOf(process.getAD_User_ID()));
 		}
 		
 		//	To Activity Responsible
@@ -401,9 +411,9 @@ public class WorkflowProcessor extends AdempiereServer
 		//	Processor SuperVisor
 		if (toSupervisor 
 			&& m_model.getSupervisor_ID() != 0
-			&& !list.contains(new Integer(m_model.getSupervisor_ID()))) {
+			&& !list.contains(Integer.valueOf(m_model.getSupervisor_ID()))) {
 			counter++;
-			list.add (new Integer(m_model.getSupervisor_ID()));
+			list.add(Integer.valueOf(m_model.getSupervisor_ID()));
 		}
 		Trx.run(transactionName -> {
 			DefaultNotifier notifier = getDefaultNotifierInstance(transactionName);
@@ -412,8 +422,7 @@ public class WorkflowProcessor extends AdempiereServer
 				.withText(subject)
 				.addAttachment(attachmentAsPDF.get())
 				.withDescription(message.get())
-				.withTableId(po.get_Table_ID())
-				.withRecordId(po.get_ID());
+				.withEntity(po);
 			list.forEach(userId -> notifier.addRecipient(userId));
 			notifier.addToQueue();
 		});
@@ -451,9 +460,9 @@ public class WorkflowProcessor extends AdempiereServer
 		//	Human
 		else if (MWFResponsible.RESPONSIBLETYPE_Human.equals(responsible.getResponsibleType())
 			&& responsible.getAD_User_ID() != 0
-			&& !list.contains(new Integer(responsible.getAD_User_ID()))) {
+			&& !list.contains(Integer.valueOf(responsible.getAD_User_ID()))) {
 			counter++;
-			list.add (new Integer(responsible.getAD_User_ID()));
+			list.add(Integer.valueOf(responsible.getAD_User_ID()));
 		}
 		//	Org of the Document
 		else if (MWFResponsible.RESPONSIBLETYPE_Organization.equals(responsible.getResponsibleType())) {
@@ -461,9 +470,9 @@ public class WorkflowProcessor extends AdempiereServer
 			if (document != null) {
 				MOrgInfo org = MOrgInfo.get (getCtx(), document.getAD_Org_ID(), null);
 				if (org.getSupervisor_ID() != 0
-					&& !list.contains(new Integer(org.getSupervisor_ID()))) {
+					&& !list.contains(Integer.valueOf(org.getSupervisor_ID()))) {
 					counter++;
-					list.add (new Integer(org.getSupervisor_ID()));
+					list.add(Integer.valueOf(org.getSupervisor_ID()));
 				}
 			}
 		}
@@ -477,9 +486,9 @@ public class WorkflowProcessor extends AdempiereServer
 				if (!roles.isActive())
 					continue;
 				int AD_User_ID = roles.getAD_User_ID();
-				if (!list.contains(new Integer(AD_User_ID))) {
+				if (!list.contains(Integer.valueOf(AD_User_ID))) {
 					counter++;
-					list.add (new Integer(AD_User_ID));
+					list.add(Integer.valueOf(AD_User_ID));
 				}
 			}
 		}
@@ -492,8 +501,7 @@ public class WorkflowProcessor extends AdempiereServer
 				.withText(subject)
 				.addAttachment(pdf)
 				.withDescription(message)
-				.withTableId(po.get_Table_ID())
-				.withRecordId(po.get_ID());
+				.withEntity(po);
 			//	Add all recipients
 			list.forEach(userId -> notifier.addRecipient(userId));
 			//	Add to queue

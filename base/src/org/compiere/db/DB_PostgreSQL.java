@@ -37,6 +37,7 @@ import javax.sql.ConnectionPoolDataSource;
 import javax.sql.DataSource;
 import javax.sql.RowSet;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -460,7 +461,7 @@ public class DB_PostgreSQL implements AdempiereDatabase
 		{
 			try
 			{
-				result = number.setScale(scale, BigDecimal.ROUND_HALF_UP);
+				result = number.setScale(scale, RoundingMode.HALF_UP);
 			}
 			catch (Exception e)
 			{
@@ -585,7 +586,6 @@ public class DB_PostgreSQL implements AdempiereDatabase
 				config.setPassword(connection.getDbPwd());
 				config.setConnectionTestQuery(DEFAULT_CONN_TEST_SQL);
 				config.setIdleTimeout(0);
-				config.setKeepaliveTime(30000);
 				config.setMinimumIdle(15);
 				config.setMaximumPoolSize(150);
 				config.setPoolName("AdempiereDS");

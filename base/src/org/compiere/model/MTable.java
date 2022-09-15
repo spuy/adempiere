@@ -24,6 +24,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -145,7 +146,7 @@ public class MTable extends X_AD_Table
 	 */
 	public static MTable get (Properties ctx, int AD_Table_ID)
 	{
-		Integer key = new Integer (AD_Table_ID);
+		Integer key = Integer.valueOf(AD_Table_ID);
 		MTable retValue = s_cache.get (key);
 		if (retValue != null && retValue.getCtx() == ctx) {
 			return retValue;
@@ -173,7 +174,7 @@ public class MTable extends X_AD_Table
 		}
 		MTable retValue = MTable.get(ctx, tableId);
 		if (retValue != null) {
-			Integer key = new Integer (retValue.getAD_Table_ID());
+			Integer key = Integer.valueOf(retValue.getAD_Table_ID());
 			s_cache.put (key, retValue);
 		}
 		return retValue;
@@ -248,36 +249,36 @@ public class MTable extends X_AD_Table
 				break;
 			}
 		}
-		
 		//begin [ 1784588 ] Use ModelPackage of EntityType to Find Model Class - vpj-cd
-		if (!MEntityType.ENTITYTYPE_Dictionary.equals(entityType))
+		if (!MEntityType.ENTITYTYPE_Dictionary.equals(entityType)
+				&& !entityType.equals("CRM")
+				&& !entityType.equals("FA"))
 		{
-			MEntityType et = MEntityType.get(Env.getCtx(), entityType);
-			String etmodelpackage = et.getModelPackage();
-			if (etmodelpackage != null)
+			MEntityType entityTypeModel = MEntityType.get(Env.getCtx(), entityType);
+			String entityTypeModelpackage = entityTypeModel.getModelPackage();
+			if (entityTypeModelpackage != null)
 			{						
 				Class<?> clazz = null;
-				clazz = getPOclass(etmodelpackage + ".M" + Util.replace(tableName, "_", ""), tableName);
+				clazz = getPOclass(entityTypeModelpackage + ".M" + Util.replace(tableName, "_", ""), tableName);
 				if (clazz != null) {
 					s_classCache.put(tableName, clazz);
 					return clazz;
 				}
 				//Allows extend core clase based original table
-				clazz = getPOclass(etmodelpackage + ".M" + tableName.substring(tableName.indexOf("_") + 1 ), tableName);
+				clazz = getPOclass(entityTypeModelpackage + ".M" + tableName.substring(tableName.indexOf("_") + 1 ), tableName);
 				if (clazz != null) {
 					s_classCache.put(tableName, clazz);
 					return clazz;
 				}
-				clazz = getPOclass(etmodelpackage + ".X_" + tableName, tableName);
+				clazz = getPOclass(entityTypeModelpackage + ".X_" + tableName, tableName);
 				if (clazz != null) {
 					s_classCache.put(tableName, clazz);
 					return clazz;
 				}
 				s_log.warning("No class for table with it entity: " + tableName);					
 			}
-		}	
+		}
 		//end [ 1784588 ] 
-
 		//	Strip table name prefix (e.g. AD_) Customizations are 3/4
 		String className = tableName;
 		int index = className.indexOf('_');
@@ -288,7 +289,19 @@ public class MTable extends X_AD_Table
 		}
 		//	Remove underlines
 		className = Util.replace(className, "_", "");
-	
+		//	No dictionary
+		if(!MEntityType.ENTITYTYPE_Dictionary.equals(entityType)) {
+			MEntityType entityTypeModel = MEntityType.get(Env.getCtx(), entityType);
+			if(entityTypeModel.getModelPackage() != null
+					&& Arrays.asList(s_packages).stream().noneMatch(specialPackage -> specialPackage.equals(entityTypeModel.getModelPackage()))) {
+				StringBuffer completeName = new StringBuffer(entityTypeModel.getModelPackage()).append(".M").append(className);
+				Class<?> defaultClass = getPOclass(completeName.toString(), tableName);
+				if (defaultClass != null) {
+					s_classCache.put(tableName, defaultClass);
+					return defaultClass;
+				}
+			}
+		}
 		//	Search packages
 		for (int i = 0; i < s_packages.length; i++)
 		{
@@ -525,7 +538,7 @@ public class MTable extends X_AD_Table
 			//log.log(Level.WARNING, "(id) - Class not found for " + tableName);
 			//return null;
 			log.log(Level.INFO, "Using GenericPO for " + tableName);
-			GenericPO po = new GenericPO(tableName, getCtx(), new Integer(Record_ID), trxName);
+			GenericPO po = new GenericPO(tableName, getCtx(), Integer.valueOf(Record_ID), trxName);
 			return po;
 		}
 		
@@ -545,7 +558,7 @@ public class MTable extends X_AD_Table
 				log.warning("No transaction Constructor for " + clazz + " (" + msg + ")");
 			}
 			
-			PO po = (PO)constructor.newInstance(new Object[] {getCtx(), new Integer(Record_ID), trxName});
+			PO po = (PO) constructor.newInstance(new Object[] {getCtx(), Integer.valueOf(Record_ID), trxName});
 			if (po != null && po.get_ID() != Record_ID && Record_ID > 0)
 				return null;
 			return po;
@@ -711,7 +724,12 @@ public class MTable extends X_AD_Table
 				setNameOldValue((String) this.get_ValueOld(MTable.COLUMNNAME_TableName));
 			}
 		}
-
+		if(is_ValueChanged(COLUMNNAME_EntityType) && !newRecord) {
+			getColumnsAsList().forEach(column -> {
+				column.setEntityType(getEntityType());
+				column.saveEx();
+			});
+		}
 		return true;
 	}	//	beforeSave
 	
@@ -782,6 +800,12 @@ public class MTable extends X_AD_Table
 		{
 			// Ignore errors
 			syncDatabase(null);
+		}
+		if(!newRecord && is_ValueChanged(COLUMNNAME_EntityType)) {
+			getColumnsAsList(true).forEach(column -> {
+				column.setEntityType(getEntityType());
+				column.saveEx();
+			});
 		}
 		return success;
 	}	//	afterSave

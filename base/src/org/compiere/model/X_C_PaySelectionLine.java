@@ -526,11 +526,6 @@ public class X_C_PaySelectionLine extends PO implements I_C_PaySelectionLine, I_
 		return bd;
 	}
 
-	public org.spin.model.I_FM_Account getFM_Account() throws RuntimeException
-    {
-		return (org.spin.model.I_FM_Account)MTable.get(getCtx(), org.spin.model.I_FM_Account.Table_Name)
-			.getPO(getFM_Account_ID(), get_TrxName());	}
-
 	/** Set Financial Account.
 		@param FM_Account_ID Financial Account	  */
 	public void setFM_Account_ID (int FM_Account_ID)
@@ -550,12 +545,6 @@ public class X_C_PaySelectionLine extends PO implements I_C_PaySelectionLine, I_
 			 return 0;
 		return ii.intValue();
 	}
-
-	public org.eevolution.model.I_HR_Movement getHR_Movement() throws RuntimeException
-    {
-		return (org.eevolution.model.I_HR_Movement)MTable.get(getCtx(), org.eevolution.model.I_HR_Movement.Table_Name)
-			.getPO(getHR_Movement_ID(), get_TrxName());	}
-
 	/** Set Payroll Movement.
 		@param HR_Movement_ID Payroll Movement	  */
 	public void setHR_Movement_ID (int HR_Movement_ID)
