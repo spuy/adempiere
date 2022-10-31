@@ -14,15 +14,17 @@
  * See: openupsolutions.com                                                           *
  *************************************************************************************/
 
-plugins {
-    id 'java'
-    id 'application'
-}
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'java-library'
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
 
 group 'org.adempiere'
 version '3.9.3'
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven { url "https://clojars.org/repo" }
 
@@ -439,10 +441,57 @@ compileJava {
 }
 
 application {
-    mainClass = 'org.compiere.Adempiere'
+    mainClass = 'org.adempiere.Adempiere'
     applicationDefaultJvmArgs = ["-DPropertyFile=../../../AdempiereProperties/AD_trunk.properties"]
 }
 
 test {
     useJUnitPlatform()
+}
+
+
+if (JavaVersion.current().isJava8Compatible()) {
+    allprojects {
+        tasks.withType(Javadoc) {
+            options.addStringOption('Xdoclint:none', '-quiet')
+        }
+    }
+}
+
+dependencies {
+    //api 'io.github.adempiere:base:3.9.4-develop-1.0'
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+
+
+
+if (JavaVersion.current().isJava8Compatible()) {
+    allprojects {
+        tasks.withType(Javadoc) {
+            options.addStringOption('Xdoclint:none', '-quiet')
+        }
+    }
+}
+
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+
+def entityType = 'D'
+version = "3.9.4-develop-1.0"
+
+jar {
+    manifest {
+        attributes("Implementation-Title": "Adempiere Project Management",
+                "Implementation-Version": version,
+                "EntityType": entityType)
+    }
 }
