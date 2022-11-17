@@ -1088,28 +1088,36 @@ public class AgencyValidator implements ModelValidator
 			BigDecimal restShipQtyEntered = toDeliver;
 			BigDecimal qtyShip = toDeliver;
 
-			for (Pair<Integer, BigDecimal> invoiceLine : invoiceLines) {
-
-				if(restShipQtyEntered.compareTo(Env.ZERO) <= 0)
-					break;
-
-				qtyShip = restShipQtyEntered;
-
-				int invoiceLineID = invoiceLine.getValue0();
-				BigDecimal qtyInvAvailable = invoiceLine.getValue1();
-				//BigDecimal restShipQtyInvoiced = qtyInvAvailable;
-
-				if(qtyShip.compareTo(qtyInvAvailable) > 0)
-					qtyShip = qtyInvAvailable;
+			if(invoiceLines.isEmpty()){
 
 				MInOutLine inOutLine = new MInOutLine (inOut);
 				inOutLine.setOrderLine(orderLine, 0, qtyShip);
 				inOutLine.setQty(qtyShip);
-				inOutLine.set_ValueOfColumn("C_InvoiceLine_ID", invoiceLineID);
 				inOutLine.saveEx();
 
-				restShipQtyEntered = restShipQtyEntered.subtract(qtyShip);
-				//restShipQtyInvoiced = restShipQtyInvoiced.subtract(qtyShip);
+			} else {
+
+				for (Pair<Integer, BigDecimal> invoiceLine : invoiceLines) {
+
+					if(restShipQtyEntered.compareTo(Env.ZERO) <= 0)
+						break;
+
+					qtyShip = restShipQtyEntered;
+
+					int invoiceLineID = invoiceLine.getValue0();
+					BigDecimal qtyInvAvailable = invoiceLine.getValue1();
+
+					if(qtyShip.compareTo(qtyInvAvailable) > 0)
+						qtyShip = qtyInvAvailable;
+
+					MInOutLine inOutLine = new MInOutLine (inOut);
+					inOutLine.setOrderLine(orderLine, 0, qtyShip);
+					inOutLine.setQty(qtyShip);
+					inOutLine.set_ValueOfColumn("C_InvoiceLine_ID", invoiceLineID);
+					inOutLine.saveEx();
+
+					restShipQtyEntered = restShipQtyEntered.subtract(qtyShip);
+				}
 			}
 
 		} catch (Exception e) {
