@@ -16,6 +16,8 @@
 package org.spin.model;
 
 import java.math.BigDecimal;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.util.*;
@@ -34,6 +36,7 @@ import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.compiere.util.Util;
 import org.eevolution.service.dsl.ProcessBuilder;
+import org.javatuples.Pair;
 import org.spin.process.CommissionOrderCreateAbstract;
 
 import com.eevolution.model.I_S_Contract;
@@ -976,10 +979,9 @@ public class AgencyValidator implements ModelValidator
 			lines.entrySet().stream().forEach(linesSet -> {
 				MOrderLine orderLine = new MOrderLine(expenseReport.getCtx(), linesSet.getKey(), expenseReport.get_TrxName());
 				BigDecimal toDeliver = linesSet.getValue();
-				MInOutLine inOutLine = new MInOutLine (inOut);
-				inOutLine.setOrderLine(orderLine, 0, toDeliver);
-				inOutLine.setQty(toDeliver);
-				inOutLine.saveEx();
+
+				createInoutLine(inOut, orderLine, toDeliver);
+
 				totalOrdered.updateAndGet(amount -> amount.add(orderLine.getLineNetAmt()));
 				totalDelivered.updateAndGet(amount -> amount.add(orderLine.getPriceActual().multiply(toDeliver)));
 			});
@@ -1037,6 +1039,83 @@ public class AgencyValidator implements ModelValidator
                 }
             }//Fin #12701.
 		}
+
+	private List<Pair<Integer, BigDecimal>> getInvoiceLines(MOrderLine orderLine) {
+
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		List<Pair<Integer, BigDecimal>> invoiceLines = new ArrayList<>();
+
+		try{
+
+			String sql = "SELECT il.c_invoiceline_id, (SELECT coalesce(SUM(qty),0)" +
+					" FROM m_matchinv WHERE c_invoiceline_id = il.c_invoiceline_id) as qtyUsed" +
+					" FROM c_invoiceline il" +
+					" JOIN c_invoice i ON il.c_invoice_id = i.c_invoice_id" +
+					" WHERE i.docstatus IN ('CO','CL')" +
+					" AND il.c_orderline_id = " + orderLine.get_ID();
+
+			pstmt = DB.prepareStatement(sql, orderLine.get_TrxName());
+			rs = pstmt.executeQuery();
+
+			while (rs.next()){
+
+				MInvoiceLine iLine = new MInvoiceLine(orderLine.getCtx(), rs.getInt("C_InvoiceLine_ID"), orderLine.get_TrxName());
+				BigDecimal qtyInvoiced = iLine.getQtyInvoiced();
+				BigDecimal qtyUsed = rs.getBigDecimal("qtyUsed");
+				BigDecimal qtyInvAvailable = qtyInvoiced.subtract(qtyUsed);
+
+				if(qtyInvAvailable.compareTo(Env.ZERO) > 0)
+					invoiceLines.add(new Pair<>(rs.getInt("C_InvoiceLine_ID"),qtyInvAvailable));
+
+			}
+
+		} catch (Exception e) {
+			throw new AdempiereException(e.getMessage());
+		} finally {
+			DB.close(rs, pstmt);
+		}
+
+		return invoiceLines;
+	}
+
+	private void createInoutLine(MInOut inOut, MOrderLine orderLine, BigDecimal toDeliver) {
+
+		try {
+
+			List<Pair<Integer, BigDecimal>> invoiceLines = getInvoiceLines(orderLine);
+
+			BigDecimal restShipQtyEntered = toDeliver;
+			BigDecimal qtyShip = toDeliver;
+
+			for (Pair<Integer, BigDecimal> invoiceLine : invoiceLines) {
+
+				if(restShipQtyEntered.compareTo(Env.ZERO) <= 0)
+					break;
+
+				qtyShip = restShipQtyEntered;
+
+				int invoiceLineID = invoiceLine.getValue0();
+				BigDecimal qtyInvAvailable = invoiceLine.getValue1();
+				//BigDecimal restShipQtyInvoiced = qtyInvAvailable;
+
+				if(qtyShip.compareTo(qtyInvAvailable) > 0)
+					qtyShip = qtyInvAvailable;
+
+				MInOutLine inOutLine = new MInOutLine (inOut);
+				inOutLine.setOrderLine(orderLine, 0, qtyShip);
+				inOutLine.setQty(qtyShip);
+				inOutLine.set_ValueOfColumn("C_InvoiceLine_ID", invoiceLineID);
+				inOutLine.saveEx();
+
+				restShipQtyEntered = restShipQtyEntered.subtract(qtyShip);
+				//restShipQtyInvoiced = restShipQtyInvoiced.subtract(qtyShip);
+			}
+
+		} catch (Exception e) {
+			throw new AdempiereException(e.getMessage());
+		}
+	}
 
     /**
      * OpenUp. Nicolas Sarlabos. 04/11/2019. #12701.
