@@ -37,6 +37,7 @@
     <pathelement path="../tools/lib/commons-io.jar"/>
   	<pathelement path="../tools/lib/poi-ooxml-3.17.jar" />
     <pathelement path="../tools/lib/vavr-1.0.0-alpha-4.jar" />
+    <pathelement path="../tools/lib/javatuples-1.2.jar" />
   </path>
 
 
