@@ -1118,6 +1118,13 @@ public class AgencyValidator implements ModelValidator
 
 					restShipQtyEntered = restShipQtyEntered.subtract(qtyShip);
 				}
+
+				if(restShipQtyEntered.compareTo(Env.ZERO) > 0){
+					MInOutLine inOutLine = new MInOutLine (inOut);
+					inOutLine.setOrderLine(orderLine, 0, restShipQtyEntered);
+					inOutLine.setQty(restShipQtyEntered);
+					inOutLine.saveEx();
+				}
 			}
 
 		} catch (Exception e) {
