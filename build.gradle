@@ -449,6 +449,7 @@ test {
     useJUnitPlatform()
 }
 
+tasks.withType(Javadoc).all { enabled = false }
 
 if (JavaVersion.current().isJava8Compatible()) {
     allprojects {
