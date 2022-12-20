@@ -1157,20 +1157,6 @@ public class AgencyValidator implements ModelValidator
 
             }
 
-            // Genero linea de entrega
-            MInOutLine inoutLine = new MInOutLine(inoutHdr);
-            inoutLine.setC_OrderLine_ID(oLine.get_ID());
-            inoutLine.setM_Product_ID(oLine.getM_Product_ID());
-            inoutLine.setC_UOM_ID(oLine.getC_UOM_ID());
-            inoutLine.setM_AttributeSetInstance_ID(oLine.getM_AttributeSetInstance_ID());
-            inoutLine.setM_Warehouse_ID(oLine.getM_Warehouse_ID());
-            inoutLine.setUser1_ID(oLine.getUser1_ID());//Solop. Nicolas Sarlabos. 5/7/2021. #16333.
-			inoutLine.setUser4_ID(oLine.getUser4_ID());//Solop. Nicolas Sarlabos. 5/7/2021. #16333.
-
-            MWarehouse warehouse = (MWarehouse)oLine.getM_Warehouse();
-
-            inoutLine.setM_Locator_ID(MLocator.getDefault(warehouse).get_ID());
-
             int link_line_id = oLine.getLink_OrderLine_ID();
 
             String sql = "select l.m_inoutline_id" +
@@ -1186,11 +1172,62 @@ public class AgencyValidator implements ModelValidator
             if(ioLine_id > 0){
 
                 MInOutLine ref_line = new MInOutLine(inout.getCtx(), ioLine_id, inout.get_TrxName());
+                MInOutLine inOutLine = null;
+				List<Pair<Integer, BigDecimal>> invoiceLines = getInvoiceLines(oLine);
 
-                inoutLine.setQtyEntered(ref_line.getQtyEntered());
-                inoutLine.setMovementQty(ref_line.getMovementQty());
+				BigDecimal restShipQtyEntered = ref_line.getQtyEntered();
+				BigDecimal qtyShip;
 
-                inoutLine.saveEx();
+				if(!invoiceLines.isEmpty()){
+
+					for (Pair<Integer, BigDecimal> invoiceLine : invoiceLines) {
+
+						if(restShipQtyEntered.compareTo(Env.ZERO) <= 0)
+							break;
+
+						qtyShip = restShipQtyEntered;
+
+						int invoiceLineID = invoiceLine.getValue0();
+						BigDecimal qtyInvAvailable = invoiceLine.getValue1();
+
+						if(qtyShip.compareTo(qtyInvAvailable) > 0)
+							qtyShip = qtyInvAvailable;
+
+						inOutLine = new MInOutLine (inoutHdr);
+						inOutLine.setOrderLine(oLine, 0, qtyShip);
+						inOutLine.setM_Warehouse_ID(oLine.getM_Warehouse_ID());
+						inOutLine.setQty(qtyShip);
+						inOutLine.set_ValueOfColumn("C_InvoiceLine_ID", invoiceLineID);
+						inOutLine.saveEx();
+
+						restShipQtyEntered = restShipQtyEntered.subtract(qtyShip);
+					}
+
+					if(restShipQtyEntered.compareTo(Env.ZERO) > 0){
+						inOutLine = new MInOutLine (inoutHdr);
+						inOutLine.setOrderLine(oLine, 0, restShipQtyEntered);
+						inOutLine.setM_Warehouse_ID(oLine.getM_Warehouse_ID());
+						inOutLine.setQty(restShipQtyEntered);
+						inOutLine.saveEx();
+					}
+
+				} else {
+
+					// Genero linea de entrega
+					MInOutLine inoutLine = new MInOutLine(inoutHdr);
+					inoutLine.setC_OrderLine_ID(oLine.get_ID());
+					inoutLine.setM_Product_ID(oLine.getM_Product_ID());
+					inoutLine.setC_UOM_ID(oLine.getC_UOM_ID());
+					inoutLine.setM_AttributeSetInstance_ID(oLine.getM_AttributeSetInstance_ID());
+					inoutLine.setM_Warehouse_ID(oLine.getM_Warehouse_ID());
+					inoutLine.setUser1_ID(oLine.getUser1_ID());//Solop. Nicolas Sarlabos. 5/7/2021. #16333.
+					inoutLine.setUser4_ID(oLine.getUser4_ID());//Solop. Nicolas Sarlabos. 5/7/2021. #16333.
+					MWarehouse warehouse = (MWarehouse)oLine.getM_Warehouse();
+					inoutLine.setM_Locator_ID(MLocator.getDefault(warehouse).get_ID());
+					inoutLine.setQtyEntered(ref_line.getQtyEntered());
+					inoutLine.setMovementQty(ref_line.getMovementQty());
+					inoutLine.saveEx();
+				}
             }
         }
 
