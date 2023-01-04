@@ -49,7 +49,7 @@ jobs:
       - name: Build Adempiere with database restore...
         uses: ./.github/actions/adempiere-build
         with:
-           nodbrestore: false
+           nodbrestore: true
            
       - name: Upload zip
         uses: skx/github-action-publish-binaries@master
