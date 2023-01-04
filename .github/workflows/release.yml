@@ -69,7 +69,7 @@ jobs:
           echo $PATH
           echo $(ant -version)
           echo $ADEMPIERE_HOME
-          ant build
+          ant build -Dnodbrestore=true
       # Create Artifact for Download
       - name: Upload zip
         uses: skx/github-action-publish-binaries@master
