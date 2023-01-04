@@ -484,7 +484,7 @@ java {
 
 
 def entityType = 'D'
-version = System.getenv("ADEMPIERE_LIBRARY_VERSION")
+version = "3.9.4-develop-1.0"
 
 jar {
     manifest {
