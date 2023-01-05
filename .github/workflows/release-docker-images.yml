@@ -33,7 +33,8 @@ jobs:
           args: -L $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/${{ github.event.release.tag_name }}/Adempiere_393LTS.tar.gz > Adempiere_393LTS.tar.gz
 
       - name: Copy Adempiere Binary 
-        run: | 
+        run: |
+          mkdir -p docker/adempiere/
           cp Adempiere*.tar.gz docker/adempiere/
           ls docker/adempiere/
       
