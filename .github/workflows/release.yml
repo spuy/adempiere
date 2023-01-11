@@ -95,6 +95,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: 'install/build/*.tar.gz.MD5'
+      - run: find . -iname "*Adempiere_pg.dmp"
+      - name: Upload Seed (Database)
+        uses: skx/github-action-publish-binaries@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN_ACCESS }}
+        with:
+          args: 'adempiere/Adempiere/data/Adempiere_pg.dmp'
       - name: Upload Seed (Database)
         uses: skx/github-action-publish-binaries@master
         env:
