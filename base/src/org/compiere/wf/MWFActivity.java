@@ -1154,6 +1154,17 @@ public class MWFActivity extends X_AD_WF_Activity implements Runnable
 			dbValue = new Integer (value);
 		else
 			dbValue = value;
+
+		if (m_po instanceof DocAction) {
+			DocAction doc = (DocAction) m_po;
+
+			int contextUserId = Env.getAD_User_ID(getCtx());
+			int documentUserId = doc.getDoc_User_ID();
+			if (contextUserId == documentUserId) {
+				throw new AdempiereException("Error el creador no puede aprobar");
+			}
+		}
+
 		m_po.set_ValueOfColumn(getNode().getAD_Column_ID(), dbValue);
 		m_po.saveEx();
 		if (dbValue != null && !dbValue.equals(m_po.get_ValueOfColumn(getNode().getAD_Column_ID()))) {
