@@ -1155,13 +1155,18 @@ public class MWFActivity extends X_AD_WF_Activity implements Runnable
 		else
 			dbValue = value;
 
+		MWFActivity updatedMwfActivity = new MWFActivity(Env.getCtx(), get_ID(), get_TrxName());
+		if (updatedMwfActivity.get_ID() <= 0 || !WFSTATE_Suspended.equalsIgnoreCase(updatedMwfActivity.getWFState())) {
+			throw new AdempiereException("@CurrentRecordModified@");
+		}
+
 		if (m_po instanceof DocAction) {
 			DocAction doc = (DocAction) m_po;
 
 			int contextUserId = Env.getAD_User_ID(getCtx());
 			int documentUserId = doc.getDoc_User_ID();
 			if (contextUserId == documentUserId) {
-				throw new AdempiereException("Error el creador no puede aprobar");
+				throw new AdempiereException("El creador del documento no puede aprobarse él mismo");
 			}
 		}
 
