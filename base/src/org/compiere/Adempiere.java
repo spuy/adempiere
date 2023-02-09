@@ -72,7 +72,7 @@ public final class Adempiere
 	static public String	DB_VERSION		= "2019-05-03";
 
 	/** Product Name            */
-	static public final String	NAME 			= "ADempiere\u00AE";
+	static public final String	NAME 			= "Solop";
 	/** URL of Product          */
 	static public final String	URL				= "www.adempiere.net";
 	/** 16*16 Product Image. **/
@@ -89,9 +89,9 @@ public final class Adempiere
 	static private String		s_supportEmail	= "";
 
 	/** Subtitle                */
-	static public final String	SUB_TITLE		= "Smart Suite ERP,CRM and SCM";
-	static public final String	ADEMPIERE_R		= "Powered by ADempiere ERP\u00AE";
-	static public final String	COPYRIGHT		= "\u00A9 1999-2019 ADempiere\u00AE";
+	static public final String	SUB_TITLE		= "";
+	static public final String	ADEMPIERE_R		= "Powered by Solop";
+	static public final String	COPYRIGHT		= "";
 
 	static private String		s_ImplementationVersion = null;
 	static private String		s_ImplementationVendor = null;
