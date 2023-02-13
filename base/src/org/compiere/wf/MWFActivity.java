@@ -28,6 +28,7 @@ import java.sql.Savepoint;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Properties;
@@ -1156,7 +1157,7 @@ public class MWFActivity extends X_AD_WF_Activity implements Runnable
 			dbValue = value;
 
 		MWFActivity updatedMwfActivity = new MWFActivity(Env.getCtx(), get_ID(), get_TrxName());
-		if (updatedMwfActivity.get_ID() <= 0 || !WFSTATE_Suspended.equalsIgnoreCase(updatedMwfActivity.getWFState())) {
+		if (updatedMwfActivity.get_ID() <= 0 || !Arrays.asList(WFSTATE_Suspended, WFSTATE_Running).contains(updatedMwfActivity.getWFState())) {
 			throw new AdempiereException("@CurrentRecordModified@");
 		}
 
