@@ -58,7 +58,6 @@ dependencies {
     implementation files('zkwebui/WEB-INF/lib/zkmax-sources.jar')
     implementation files('zkwebui/WEB-INF/lib/timelinez.jar')
     implementation files('zkwebui/WEB-INF/lib/zcommons-el.jar')
-    implementation files('zkwebui/WEB-INF/lib/cglib.jar')
     implementation files('zkwebui/WEB-INF/lib/zcommon-sources.jar')
     implementation files('zkwebui/WEB-INF/lib/jxl.jar')
     implementation files('zkwebui/WEB-INF/lib/gmapsz.jar')
@@ -121,7 +120,6 @@ dependencies {
     implementation group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.795'
     implementation group: 'com.sun.activation', name: 'javax.activation', version: '1.2.0'
     implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.6'
-    implementation files('tools/lib/cglib.jar')
     implementation files('tools/lib/lablib-checkboxtree-3.3.jar')
     implementation files('tools/lib/wizard.jar')
     implementation group: 'com.github.lbordowitz.openforecast', name: 'openforecast', version: '0.5.0'
