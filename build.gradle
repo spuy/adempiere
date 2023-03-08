@@ -492,4 +492,12 @@ jar {
                    "Implementation-Version": version, 
                    "EntityType": entityType)
     }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+}
+
+tasks.withType(Copy).all { duplicatesStrategy 'exclude' }
+tasks.withType(Tar).all { duplicatesStrategy 'exclude' }
+tasks.withType(Tar.class).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
