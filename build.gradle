@@ -501,3 +501,4 @@ tasks.withType(Tar).all { duplicatesStrategy 'exclude' }
 tasks.withType(Tar.class).configureEach {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+tasks.withType(Zip).all { duplicatesStrategy 'exclude' }
