@@ -68,3 +68,5 @@ utils_dev/packages/testSqlStatement2Pack.tar.gz
 utils_dev/packages/testSqlStatement2Pack.zip
 utils_dev/packages/testSqlStatement2Pack/
 utils_dev/mytest.properties
+/lib/ADInterface-1.0.war
+/lib/mysql-connector-java-5.1.13-bin.jar
