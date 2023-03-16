@@ -1040,20 +1040,36 @@ public class AgencyValidator implements ModelValidator
             }//Fin #12701.
 		}
 
-	private List<Pair<Integer, BigDecimal>> getInvoiceLines(MOrderLine orderLine) {
+	private List<Pair<Integer, BigDecimal>> getInvoiceLines(MInOut inOut, MOrderLine orderLine) {
 
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
+		String whereDocBaseType = "";
 		List<Pair<Integer, BigDecimal>> invoiceLines = new ArrayList<>();
 
 		try{
+
+			MDocType inOutDocType = (MDocType) inOut.getC_DocType();
+
+			//si es Entrega o Recepcion
+			if ((inOutDocType.getDocBaseType().equals(MDocType.DOCBASETYPE_MaterialReceipt) && !inOutDocType.isSOTrx())
+					|| (inOutDocType.getDocBaseType().equals(MDocType.DOCBASETYPE_MaterialDelivery) && inOutDocType.isSOTrx())) {
+				whereDocBaseType = " AND d.docbasetype in ('ARI','API')";
+
+			//si es Devolucion Cliente o Proveedor
+			} else if((inOutDocType.getDocBaseType().equals(MDocType.DOCBASETYPE_MaterialReceipt) && inOutDocType.isSOTrx())
+					|| (inOutDocType.getDocBaseType().equals(MDocType.DOCBASETYPE_MaterialDelivery) && !inOutDocType.isSOTrx())){
+				whereDocBaseType = " AND d.docbasetype in ('ARC','APC')";
+
+			}
 
 			String sql = "SELECT il.c_invoiceline_id, (SELECT coalesce(SUM(qty),0)" +
 					" FROM m_matchinv WHERE c_invoiceline_id = il.c_invoiceline_id) as qtyUsed" +
 					" FROM c_invoiceline il" +
 					" JOIN c_invoice i ON il.c_invoice_id = i.c_invoice_id" +
+					" JOIN c_doctype d ON i.c_doctypetarget_id = d.c_doctype_id" +
 					" WHERE i.docstatus IN ('CO','CL')" +
-					" AND il.c_orderline_id = " + orderLine.get_ID();
+					" AND il.c_orderline_id = " + orderLine.get_ID() + whereDocBaseType;
 
 			pstmt = DB.prepareStatement(sql, orderLine.get_TrxName());
 			rs = pstmt.executeQuery();
@@ -1083,7 +1099,7 @@ public class AgencyValidator implements ModelValidator
 
 		try {
 
-			List<Pair<Integer, BigDecimal>> invoiceLines = getInvoiceLines(orderLine);
+			List<Pair<Integer, BigDecimal>> invoiceLines = getInvoiceLines(inOut, orderLine);
 
 			BigDecimal restShipQtyEntered = toDeliver;
 			BigDecimal qtyShip = toDeliver;
@@ -1172,8 +1188,8 @@ public class AgencyValidator implements ModelValidator
             if(ioLine_id > 0){
 
                 MInOutLine ref_line = new MInOutLine(inout.getCtx(), ioLine_id, inout.get_TrxName());
-                MInOutLine inOutLine = null;
-				List<Pair<Integer, BigDecimal>> invoiceLines = getInvoiceLines(oLine);
+                MInOutLine inOutLine;
+				List<Pair<Integer, BigDecimal>> invoiceLines = getInvoiceLines(inoutHdr, oLine);
 
 				BigDecimal restShipQtyEntered = ref_line.getQtyEntered();
 				BigDecimal qtyShip;
