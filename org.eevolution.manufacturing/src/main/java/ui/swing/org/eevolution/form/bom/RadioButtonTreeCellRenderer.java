@@ -306,7 +306,7 @@ public class RadioButtonTreeCellRenderer implements CheckboxTreeCellRenderer {
 		log.fine("In printTree");
 		DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
 		log.fine("Node: " + node);
-		log.fine("isPathCheckbox: " + checkingModel.isPathCheckBox(getPath(node)));
+//		log.fine("isPathCheckbox: " + checkingModel.isPathCheckBox(getPath(node)));
 		for (TreePath childPath : getChildrenPath(path, model)) {
 			printTree(childPath, model, checkingModel);
 		}
@@ -475,7 +475,7 @@ public class RadioButtonTreeCellRenderer implements CheckboxTreeCellRenderer {
 		tree.setCellRenderer(m_RadioButtonTreeCellRenderer);
 		tree.addTreeCheckingListener(new TreeCheckingListener() {
 			public void valueChanged(TreeCheckingEvent e) {
-				log.fine("Checked paths changed: user clicked on " + (e.getLeadingPath().getLastPathComponent()));
+//				log.fine("Checked paths changed: user clicked on " + (e.getLeadingPath().getLastPathComponent()));
 				//       		TreeModel tm = tree.getModel();
 				//          	TreePath selected = tree.getSelectionPath();
 				//       		TreeCheckingModel checkingModel = ((CheckboxTree)tree).getCheckingModel();
