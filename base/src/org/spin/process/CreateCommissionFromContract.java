@@ -33,7 +33,10 @@ import org.compiere.util.Msg;
 import com.eevolution.model.I_S_Contract;
 import com.eevolution.model.MSContract;
 import com.eevolution.model.X_S_Contract;
+import org.compiere.util.Trx;
+
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 /** Generated Process for (Create Commission from Contract)
  *  @author ADempiere (generated) 
@@ -51,9 +54,9 @@ public class CreateCommissionFromContract extends CreateCommissionFromContractAb
 		if(getRecord_ID() <= 0) {
 			generateCommissionForAll();
 		} else if(getTable_ID() == I_S_Contract.Table_ID) {
-			generateCommissionForContract(new MSContract(getCtx(), getRecord_ID(), get_TrxName()));
+			generateCommissionForContract(getRecord_ID());
 		} else if(getTable_ID() == I_C_Project.Table_ID) {
-			generateCommissionForProject(new MProject(getCtx(), getRecord_ID(), get_TrxName()));
+			generateCommissionForProject(getRecord_ID());
 		}
 		return getDocumentResult();
 	}
@@ -63,78 +66,90 @@ public class CreateCommissionFromContract extends CreateCommissionFromContractAb
 	 */
 	private void generateCommissionForAll() {
 		List<Object> parameters = new ArrayList<>();
-		String whereClause = I_S_Contract.COLUMNNAME_DocStatus + " = ?";
+		AtomicReference<String> whereClause = new AtomicReference<>(I_S_Contract.COLUMNNAME_DocStatus + " = ?");
 		parameters.add(X_S_Contract.DOCSTATUS_Completed);
 		if(getBPartnerId() > 0) {
-			whereClause = " AND " + I_S_Contract.COLUMNNAME_C_BPartner_ID + " = ?";
+			whereClause.set(whereClause.get() + " AND " + I_S_Contract.COLUMNNAME_C_BPartner_ID + " = ?");
 			parameters.add(getBPartnerId());
 		}
-		new Query(getCtx(), I_S_Contract.Table_Name, whereClause, get_TrxName())
-			.setClient_ID()
-			.setOnlyActiveRecords(true)
-			.setParameters(parameters)
-			.setOrderBy(I_S_Contract.COLUMNNAME_DateDoc)
-			.<MSContract>list().forEach(contract -> {
-				generateCommissionForContract(contract);
+		List<MSContract> contracts = new ArrayList<>();
+		Trx.run(trxName -> {
+			contracts.addAll(new Query(getCtx(), I_S_Contract.Table_Name, whereClause.get(), trxName)
+				.setClient_ID()
+				.setOnlyActiveRecords(true)
+				.setParameters(parameters)
+				.setOrderBy(I_S_Contract.COLUMNNAME_DateDoc)
+				.list());
 		});
+
+		for (MSContract contract : contracts) {
+			generateCommissionForContract(contract.get_ID());
+		}
 	}
 	
 	/**
 	 * Generate Commission for a specific contract
-	 * @param contract
+	 * @param contractId
 	 */
-	private void generateCommissionForContract(X_S_Contract contract) {
+	private void generateCommissionForContract(int contractId) {
 		//	Get from project
-		new Query(getCtx(), I_C_Project.Table_Name, I_S_Contract.COLUMNNAME_S_Contract_ID + " = ?", get_TrxName())
-			.setClient_ID()
-			.setOnlyActiveRecords(true)
-			.setParameters(contract.getS_Contract_ID())
-			.setOrderBy(I_C_Project.COLUMNNAME_DateStart)
-			.<MProject>list().forEach(project -> {
-				generateCommissionForProject(project);
+		List<MProject> projects = new ArrayList<>();
+		Trx.run(trxName -> {
+			projects.addAll(new Query(getCtx(), I_C_Project.Table_Name, I_S_Contract.COLUMNNAME_S_Contract_ID + " = ?", trxName)
+					.setClient_ID()
+					.setOnlyActiveRecords(true)
+					.setParameters(contractId)
+					.setOrderBy(I_C_Project.COLUMNNAME_DateStart)
+					.list());
 		});
+		for (MProject project : projects) {
+			generateCommissionForProject(project.get_ID());
+		}
 	}
 	
 	
 	/**
 	 * Create commission for a specific project
-	 * @param project
+	 * @param projectId
 	 */
-	private void generateCommissionForProject(MProject project) {
-		X_S_Contract contract = new X_S_Contract(getCtx(), project.get_ValueAsInt(I_S_Contract.COLUMNNAME_S_Contract_ID), get_TrxName());
-		//	Generate
-		new Query(getCtx(), I_C_Commission.Table_Name, I_C_CommissionType.COLUMNNAME_C_CommissionType_ID + " = ? ", get_TrxName())
-			.setOnlyActiveRecords(true)
-			.setParameters(getCommissionTypeId())
-			.<MCommission>list().forEach(commissionDefinition -> {
-				if(getDocTypeId() <= 0) {
-					setDocTypeId(MDocType.getDocType(MDocType.DOCBASETYPE_SalesCommission, project.getAD_Org_ID()));
-				}
-				MCommissionRun commissionRun = new MCommissionRun(commissionDefinition);
-				commissionRun.setDateDoc(getDateDoc());
-				commissionRun.setC_DocType_ID(getDocTypeId());
-				commissionRun.setDescription(Msg.parseTranslation(getCtx(), "@Generate@: @S_Contract_ID@ - " + contract.getDocumentNo() + " @C_Project_ID@: " + project.getValue()));
-				commissionRun.setAD_Org_ID(project.getAD_Org_ID());
-				commissionRun.set_ValueOfColumn(I_S_Contract.COLUMNNAME_S_Contract_ID, contract.getS_Contract_ID());
-				commissionRun.set_ValueOfColumn(I_C_Project.COLUMNNAME_C_Project_ID, project.getC_Project_ID());
-				// Openup Solutions - #14207 - Raul Capecce - Requerido para establecer moneda destino del Calculo de Comision
-				commissionRun.set_ValueOfColumn(I_C_Project.COLUMNNAME_C_Currency_ID, project.getC_Currency_ID());
-				// Openup Solutions - #14207 - End
+	private void generateCommissionForProject(int projectId) {
+		Trx.run(trxName -> {
+			MProject project = new MProject(getCtx(), projectId, trxName);
+			X_S_Contract contract = new X_S_Contract(getCtx(), project.get_ValueAsInt(I_S_Contract.COLUMNNAME_S_Contract_ID), trxName);
+			//	Generate
+			new Query(getCtx(), I_C_Commission.Table_Name, I_C_CommissionType.COLUMNNAME_C_CommissionType_ID + " = ? ", trxName)
+					.setOnlyActiveRecords(true)
+					.setParameters(getCommissionTypeId())
+					.<MCommission>list().forEach(commissionDefinition -> {
+						if (getDocTypeId() <= 0) {
+							setDocTypeId(MDocType.getDocType(MDocType.DOCBASETYPE_SalesCommission, project.getAD_Org_ID()));
+						}
+						MCommissionRun commissionRun = new MCommissionRun(commissionDefinition);
+						commissionRun.setDateDoc(getDateDoc());
+						commissionRun.setC_DocType_ID(getDocTypeId());
+						commissionRun.setDescription(Msg.parseTranslation(getCtx(), "@Generate@: @S_Contract_ID@ - " + contract.getDocumentNo() + " @C_Project_ID@: " + project.getValue()));
+						commissionRun.setAD_Org_ID(project.getAD_Org_ID());
+						commissionRun.set_ValueOfColumn(I_S_Contract.COLUMNNAME_S_Contract_ID, contract.getS_Contract_ID());
+						commissionRun.set_ValueOfColumn(I_C_Project.COLUMNNAME_C_Project_ID, project.getC_Project_ID());
+						// Openup Solutions - #14207 - Raul Capecce - Requerido para establecer moneda destino del Calculo de Comision
+						commissionRun.set_ValueOfColumn(I_C_Project.COLUMNNAME_C_Currency_ID, project.getC_Currency_ID());
+						// Openup Solutions - #14207 - End
 
-				//	Set filter value a project
-				commissionRun.addFilterValues(I_S_Contract.COLUMNNAME_S_Contract_ID, contract.getS_Contract_ID());
-				commissionRun.addFilterValues(I_C_Project.COLUMNNAME_C_Project_ID, project.getC_Project_ID());
-				commissionRun.saveEx();
-				//	Process commission
-				commissionRun.setDocStatus(MCommissionRun.DOCSTATUS_Drafted);
-				//	Complete
-				if(commissionRun.processIt(MCommissionRun.DOCACTION_Complete)) {
-					addDocumentResult(commissionRun.getDocumentNo());
-				} else {
-					throw new AdempiereException(commissionRun.getProcessMsg());
-				}
-				//	Add to log
-				addLog(commissionRun.getC_CommissionRun_ID(), null, null, "@C_Project_ID@: " + project.getValue() + " @C_CommissionRun_ID@: " + commissionRun.getDocumentNo() + " @Created@");
+						//	Set filter value a project
+						commissionRun.addFilterValues(I_S_Contract.COLUMNNAME_S_Contract_ID, contract.getS_Contract_ID());
+						commissionRun.addFilterValues(I_C_Project.COLUMNNAME_C_Project_ID, project.getC_Project_ID());
+						commissionRun.saveEx();
+						//	Process commission
+						commissionRun.setDocStatus(MCommissionRun.DOCSTATUS_Drafted);
+						//	Complete
+						if (commissionRun.processIt(MCommissionRun.DOCACTION_Complete)) {
+							addDocumentResult(commissionRun.getDocumentNo());
+						} else {
+							throw new AdempiereException(commissionRun.getProcessMsg());
+						}
+						//	Add to log
+						addLog(commissionRun.getC_CommissionRun_ID(), null, null, "@C_Project_ID@: " + project.getValue() + " @C_CommissionRun_ID@: " + commissionRun.getDocumentNo() + " @Created@");
+					});
 		});
 	}
 	
