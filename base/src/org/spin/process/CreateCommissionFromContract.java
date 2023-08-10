@@ -21,6 +21,7 @@ import java.util.ArrayList;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.I_C_Commission;
+import org.compiere.model.I_C_CommissionLine;
 import org.compiere.model.I_C_CommissionType;
 import org.compiere.model.I_C_Project;
 import org.compiere.model.MCommission;
@@ -115,13 +116,26 @@ public class CreateCommissionFromContract extends CreateCommissionFromContractAb
 	private void generateCommissionForProject(int projectId) {
 		Trx.run(trxName -> {
 			MProject project = new MProject(getCtx(), projectId, trxName);
-			X_S_Contract contract = new X_S_Contract(getCtx(), project.get_ValueAsInt(I_S_Contract.COLUMNNAME_S_Contract_ID), trxName);
+			X_S_Contract contract = new X_S_Contract(getCtx(), project.get_ValueAsInt(I_S_Contract.COLUMNNAME_S_Contract_ID), get_TrxName());
 			//	Generate
-			new Query(getCtx(), I_C_Commission.Table_Name, I_C_CommissionType.COLUMNNAME_C_CommissionType_ID + " = ? ", trxName)
+			new Query(getCtx(), I_C_Commission.Table_Name, I_C_CommissionType.COLUMNNAME_C_CommissionType_ID + " = ? ", get_TrxName())
 					.setOnlyActiveRecords(true)
 					.setParameters(getCommissionTypeId())
-					.<MCommission>list().forEach(commissionDefinition -> {
-						if (getDocTypeId() <= 0) {
+					.<MCommission>list()
+					.stream()
+					.filter(mCommission -> {
+						// (This is for Split) If C_Commission.DocBasisType = S (Division), this needs to be linked to the contract to create the CRun
+						if ("S".equalsIgnoreCase(mCommission.getDocBasisType())) {
+							String query = I_C_CommissionLine.COLUMNNAME_C_Commission_ID + "=? AND S_Contract_ID=? AND " + I_C_CommissionLine.COLUMNNAME_IsActive + "=?";
+							return new Query(getCtx(), I_C_CommissionLine.Table_Name, query, get_TrxName())
+									.setParameters(mCommission.get_ID(), contract.get_ID(), true)
+									.match();
+						} else {
+							return true;
+						}
+					})
+					.forEach(commissionDefinition -> {
+						if(getDocTypeId() <= 0) {
 							setDocTypeId(MDocType.getDocType(MDocType.DOCBASETYPE_SalesCommission, project.getAD_Org_ID()));
 						}
 						MCommissionRun commissionRun = new MCommissionRun(commissionDefinition);

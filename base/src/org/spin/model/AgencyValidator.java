@@ -677,19 +677,21 @@ public class AgencyValidator implements ModelValidator
 						} else {
 
 							//Openup. Nicolas Sarlabos. 05/08/2020. #14419.
-							if(order.get_ValueAsInt("S_Contract_ID") > 0){
+							if(!documentType.get_ValueAsBoolean("IsSplitDocuments")){
+								if (order.get_ValueAsInt("S_Contract_ID") > 0) {
 
-								MSContract contract = new MSContract(order.getCtx(), order.get_ValueAsInt("S_Contract_ID"), order.get_TrxName());
+									MSContract contract = new MSContract(order.getCtx(), order.get_ValueAsInt("S_Contract_ID"), order.get_TrxName());
 
-								if(order.getAD_Org_ID() == contract.getAD_Org_ID()){
-									int user1Id = DB.getSQLValue(order.get_TrxName(), "SELECT p.User1_ID "
-											+ "FROM S_ContractParties p "
-											+ "WHERE S_Contract_ID = ? "
-											+ "AND EXISTS(SELECT 1 FROM AD_User u WHERE u.AD_User_ID = p.AD_User_ID AND u.C_BPartner_ID = ?)", order.get_ValueAsInt("S_Contract_ID"), order.getC_BPartner_ID());
+									if (order.getAD_Org_ID() == contract.getAD_Org_ID()) {
+										int user1Id = DB.getSQLValue(order.get_TrxName(), "SELECT p.User1_ID "
+												+ "FROM S_ContractParties p "
+												+ "WHERE S_Contract_ID = ? "
+												+ "AND EXISTS(SELECT 1 FROM AD_User u WHERE u.AD_User_ID = p.AD_User_ID AND u.C_BPartner_ID = ?)", order.get_ValueAsInt("S_Contract_ID"), order.getC_BPartner_ID());
 
-									if(user1Id > 0) {
-										order.setUser1_ID(user1Id);
-										order.saveEx();
+										if (user1Id > 0) {
+											order.setUser1_ID(user1Id);
+											order.saveEx();
+										}
 									}
 								}
 							}
