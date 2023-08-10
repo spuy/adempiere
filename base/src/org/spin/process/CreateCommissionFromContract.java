@@ -116,9 +116,9 @@ public class CreateCommissionFromContract extends CreateCommissionFromContractAb
 	private void generateCommissionForProject(int projectId) {
 		Trx.run(trxName -> {
 			MProject project = new MProject(getCtx(), projectId, trxName);
-			X_S_Contract contract = new X_S_Contract(getCtx(), project.get_ValueAsInt(I_S_Contract.COLUMNNAME_S_Contract_ID), get_TrxName());
+			X_S_Contract contract = new X_S_Contract(getCtx(), project.get_ValueAsInt(I_S_Contract.COLUMNNAME_S_Contract_ID), trxName);
 			//	Generate
-			new Query(getCtx(), I_C_Commission.Table_Name, I_C_CommissionType.COLUMNNAME_C_CommissionType_ID + " = ? ", get_TrxName())
+			new Query(getCtx(), I_C_Commission.Table_Name, I_C_CommissionType.COLUMNNAME_C_CommissionType_ID + " = ? ", trxName)
 					.setOnlyActiveRecords(true)
 					.setParameters(getCommissionTypeId())
 					.<MCommission>list()
