@@ -127,7 +127,7 @@ public class CreateCommissionFromContract extends CreateCommissionFromContractAb
 						// (This is for Split) If C_Commission.DocBasisType = S (Division), this needs to be linked to the contract to create the CRun
 						if ("S".equalsIgnoreCase(mCommission.getDocBasisType())) {
 							String query = I_C_CommissionLine.COLUMNNAME_C_Commission_ID + "=? AND S_Contract_ID=? AND " + I_C_CommissionLine.COLUMNNAME_IsActive + "=?";
-							return new Query(getCtx(), I_C_CommissionLine.Table_Name, query, get_TrxName())
+							return new Query(getCtx(), I_C_CommissionLine.Table_Name, query, trxName)
 									.setParameters(mCommission.get_ID(), contract.get_ID(), true)
 									.match();
 						} else {
