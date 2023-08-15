@@ -1527,6 +1527,16 @@ public class AgencyValidator implements ModelValidator
 					if(commissionRun.getGrandTotal() != null
 							&& commissionRun.getGrandTotal().compareTo(Env.ZERO) > 0) {
 						if(commissionDefinition.get_ValueAsBoolean("IsSplitDocuments")) {
+
+							int docType_ID =  commissionDefinition.get_ValueAsInt("C_DocTypeOrder_ID");
+
+							if(!order.isSOTrx() && order.get_ValueAsBoolean("IsDirectInvoice")){
+								int docTypeSystem_ID = Integer.valueOf(MSysConfig.getValue("UY_DIRECT_COMMISSION_DOCTYPE_OV", "0", order.getAD_Client_ID()));
+
+								if(docTypeSystem_ID > 0)
+									docType_ID = docTypeSystem_ID;
+							}
+
 							ProcessBuilder.create(order.getCtx())
 							.process(CommissionOrderCreateAbstract.getProcessId())
 							.withRecordId(I_C_CommissionRun.Table_ID, commissionRun.getC_CommissionRun_ID())
@@ -1534,7 +1544,7 @@ public class AgencyValidator implements ModelValidator
 							.withParameter(CommissionOrderCreateAbstract.DATEORDERED, commissionRun.getDateDoc()) // Redmine #13452
 							.withParameter(CommissionOrderCreateAbstract.DOCACTION, DocAction.ACTION_Complete)
 							.withParameter(CommissionOrderCreateAbstract.C_BPARTNER_ID, order.getC_BPartner_ID())
-							.withParameter(CommissionOrderCreateAbstract.C_DOCTYPE_ID, commissionDefinition.get_ValueAsInt("C_DocTypeOrder_ID"))
+							.withParameter(CommissionOrderCreateAbstract.C_DOCTYPE_ID, docType_ID)
 							.withoutTransactionClose()
 							.execute(order.get_TrxName());
 						} else {
