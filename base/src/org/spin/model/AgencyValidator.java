@@ -1365,7 +1365,7 @@ public class AgencyValidator implements ModelValidator
 							+ "FROM C_Order o "
 							+ "INNER JOIN C_OrderLine ol ON(ol.C_Order_ID = o.C_Order_ID) "
 							+ "WHERE o.DocStatus IN('CO') "
-							+ "AND COALESCE(ol.ReleasedQty, 0) > 0"
+							+ "AND COALESCE(ol.ReleasedQty, 0) > 0 "
 							+ "AND o.PreOrder_ID = ? "
 							+ "AND o.IsSOTrx = '" + (sourceOrder.isSOTrx()? "Y": "N") + "' "
 							+ "AND EXISTS(SELECT 1 FROM C_DocType dt WHERE dt.C_DocType_ID = o.C_DocType_ID AND dt.IsConsumePreOrder = 'Y')", preOrder.getC_Order_ID());
