@@ -28,6 +28,7 @@ import org.adempiere.core.domains.models.I_AD_View;
 import org.adempiere.core.domains.models.I_AD_View_Column;
 import org.adempiere.core.domains.models.I_AD_View_Definition;
 import org.adempiere.core.domains.models.X_AD_View_Definition;
+import org.adempiere.model.MView;
 import org.adempiere.model.MViewColumn;
 import org.adempiere.model.MViewDefinition;
 import org.adempiere.pipo.PackOut;
@@ -49,31 +50,35 @@ public class ViewElementHandler extends GenericPOHandler {
 			packOut.setLocalContext(ctx);
 		}
 		//	Task
-		packOut.createGenericPO(document, I_AD_View.Table_ID, viewId, true, null);
-		StringBuilder whereClause = new StringBuilder(I_AD_View.COLUMNNAME_AD_View_ID).append("=?");
-		List<MViewDefinition> viewDefinitions = new Query(ctx,
-				I_AD_View_Definition.Table_Name, whereClause.toString(),
-				getTrxName(ctx))
-				.setParameters(viewId)
-				.setOrderBy(
-						X_AD_View_Definition.COLUMNNAME_SeqNo
-								+ ","
-								+ X_AD_View_Definition.COLUMNNAME_AD_View_Definition_ID)
-				.list();
+		MView view = new MView(ctx, viewId, getTrxName(ctx));
+		if (!packOut.getGenericPOHandler().contains(view.getUUID())) {
+			packOut.createGenericPO(document, I_AD_View.Table_ID, viewId, true, null);
 
-		for (MViewDefinition viewDefinition : viewDefinitions) {
-			if(viewDefinition.getAD_Table_ID() > 0) {
-				packOut.createTable(viewDefinition.getAD_Table_ID(), document);
-			}
-			packOut.createGenericPO(document, I_AD_View_Definition.Table_ID, viewDefinition.getAD_View_Definition_ID(), true, null);
-			// View Columns tags.
-			whereClause = new StringBuilder(I_AD_View_Definition.COLUMNNAME_AD_View_Definition_ID).append("=?");
-			List<MViewColumn> viewColumns = new Query(ctx,
-					I_AD_View_Column.Table_Name, whereClause.toString(),
-					getTrxName(ctx)).setParameters(viewDefinition.getAD_View_Definition_ID())
+			StringBuilder whereClause = new StringBuilder(I_AD_View.COLUMNNAME_AD_View_ID).append("=?");
+			List<MViewDefinition> viewDefinitions = new Query(ctx,
+					I_AD_View_Definition.Table_Name, whereClause.toString(),
+					getTrxName(ctx))
+					.setParameters(viewId)
+					.setOrderBy(
+							X_AD_View_Definition.COLUMNNAME_SeqNo
+									+ ","
+									+ X_AD_View_Definition.COLUMNNAME_AD_View_Definition_ID)
 					.list();
-			for (MViewColumn vc : viewColumns) {
-				packOut.createGenericPO(document, I_AD_View_Column.Table_ID, vc.getAD_View_Column_ID(), true, null);
+
+			for (MViewDefinition viewDefinition : viewDefinitions) {
+				if (viewDefinition.getAD_Table_ID() > 0) {
+					packOut.createTable(viewDefinition.getAD_Table_ID(), document);
+				}
+				packOut.createGenericPO(document, I_AD_View_Definition.Table_ID, viewDefinition.getAD_View_Definition_ID(), true, null);
+				// View Columns tags.
+				whereClause = new StringBuilder(I_AD_View_Definition.COLUMNNAME_AD_View_Definition_ID).append("=?");
+				List<MViewColumn> viewColumns = new Query(ctx,
+						I_AD_View_Column.Table_Name, whereClause.toString(),
+						getTrxName(ctx)).setParameters(viewDefinition.getAD_View_Definition_ID())
+						.list();
+				for (MViewColumn vc : viewColumns) {
+					packOut.createGenericPO(document, I_AD_View_Column.Table_ID, vc.getAD_View_Column_ID(), true, null);
+				}
 			}
 		}
 	}
