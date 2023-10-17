@@ -44,10 +44,10 @@ public final class ServerContext extends Properties
         this.put(Env.LANGUAGE, Language.getBaseAD_Language());        
     }
     
-    private static InheritableThreadLocal<ServerContext> context = new InheritableThreadLocal<ServerContext>() {
-        protected ServerContext initialValue()
+    private static InheritableThreadLocal<Properties> context = new InheritableThreadLocal<Properties>() {
+        protected Properties initialValue()
         {
-            return new ServerContext();
+            return new Properties();
         }
     };
     
@@ -82,7 +82,7 @@ public final class ServerContext extends Properties
      * Set server context for current thread
      * @param ctx
      */
-    public static void setCurrentInstance(ServerContext ctx)
+    public static void setCurrentInstance(Properties ctx)
     {
         context.set(ctx);
     }

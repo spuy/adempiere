@@ -35,6 +35,7 @@ import org.adempiere.webui.component.ZoomCommand;
 import org.adempiere.webui.desktop.DefaultDesktop;
 import org.adempiere.webui.desktop.IDesktop;
 import org.adempiere.webui.event.TokenEvent;
+import org.adempiere.webui.session.ServerContext;
 import org.adempiere.webui.session.SessionContextListener;
 import org.adempiere.webui.session.SessionManager;
 import org.adempiere.webui.theme.ThemeManager;
@@ -137,23 +138,20 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
     {
 		this.getPage().setTitle(ThemeManager.getBrowserTitle());
 
-		Properties ctx = Env.getCtx();
-		langSession = Env.getContext(ctx, Env.LANGUAGE);
-		SessionManager.setSessionApplication(this);
-		Session session = Executions.getCurrent().getDesktop().getSession();
-
-		@SuppressWarnings("unchecked")
-		Map<String, Object>map = (Map<String, Object>) session.getAttribute(SAVED_CONTEXT);
-		session.removeAttribute(SAVED_CONTEXT);
-		if (map != null && !map.isEmpty())
-		{
-			onChangeRole(map);
+		Session session = getDesktop().getSession();
+		HttpSession httpSession = (HttpSession) session.getNativeSession();
+		ServerContext.setCurrentInstance(SessionManager.getSessionContext(httpSession.getId()));
+		this.getPage().setTitle(ThemeManager.getBrowserTitle());
+		setId(httpSession.getId());
+		langSession = Env.getContext(Env.getCtx(), Env.LANGUAGE);
+		SessionManager.setApplication(httpSession.getId(), this);
+		int userId = Env.getAD_User_ID(Env.getCtx());
+		if (userId > 0 && !SessionManager.existsExecutionCarryOver(httpSession.getId())) {
+			onChangeRole(userId);
 			return;
 		}
-
-		int userId = Env.getAD_User_ID(Env.getCtx());
-
-		if (userId > 0 && !SessionManager.existsExecutionCarryOver(httpSession.getId())) {
+		if (!SessionManager.isUserLoggedIn(Env.getCtx()))
+		{
             loginDesktop = new WLogin(this);
             loginDesktop.createPart(this.getPage());
         }
@@ -171,20 +169,15 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
     {
     }
 
-	private void onChangeRole(Map<String, Object> map)
+	private void onChangeRole(int userId)
 	{
-		Locale locale = (Locale) map.get("locale");
-		Properties properties = (Properties) map.get("context");
-		SessionManager.setSessionApplication(this);
 		loginDesktop = new WLogin(this);
+		loginDesktop.createPart(this.getPage());
 		loginDesktop.setTypedPassword(SessionManager.getUserAuthentication(getId()));
 		SessionManager.removeUserAuthentication(getId());
 		Properties newContext =  (Properties) Env.getCtx().clone();
 		Language language = Env.getLanguage(Env.getCtx());
-		if (userId > 0)
-			loginDesktop.externalAuthentication(language.getLocale(), Env.getCtx(), MUser.get(Env.getCtx(), userId));
-		else
-			loginDesktop.changeRole(language.getLocale(),newContext);
+		loginDesktop.changeRole(language.getLocale(),newContext);
 	}
 
     /* (non-Javadoc)

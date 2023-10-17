@@ -62,6 +62,8 @@ import org.zkoss.zul.Comboitem;
 import org.zkoss.zul.Div;
 import org.zkoss.zul.Image;
 
+import static org.adempiere.webui.session.SessionContextListener.SERVLET_SESSION_ID;
+
 /**
  *
  * @author  <a href="mailto:agramdass@gmail.com">Ashley G Ramdass</a>

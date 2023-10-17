@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -28,6 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import io.vavr.collection.List;
 import org.compiere.model.MUser;
 import org.compiere.util.CLogger;
 import org.compiere.util.Env;
@@ -62,7 +62,7 @@ public class OpenIDUtil {
 	
 	
 	/**Authentication Parameters to be Validate*/
-	public final static List<String> PARAMETER_TAGS = List.of(REDIRECT_URL, CLIENT_ID, CLIENT_SECRET);
+	public final static List<String> PARAMETER_TAGS = io.vavr.collection.List.of(REDIRECT_URL, CLIENT_ID, CLIENT_SECRET);
 	
 	private static final CLogger log = CLogger.getCLogger(OpenIDUtil.class);
 	

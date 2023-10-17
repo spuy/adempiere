@@ -28,6 +28,10 @@ import java.util.logging.Level;
 
 import javax.swing.*;
 
+import io.vavr.Tuple;
+import io.vavr.Tuple4;
+import io.vavr.collection.List;
+import io.vavr.control.Try;
 import org.adempiere.exceptions.DBException;
 import org.compiere.Adempiere;
 import org.compiere.db.CConnection;
@@ -50,6 +54,9 @@ import org.compiere.model.*;
  */
 public class Login
 {
+
+	protected Integer authenticatedUserId = null;
+
 	/**
 	 *  Test Init - Set Environment for tests
 	 *	@param isClient client session
@@ -224,7 +231,7 @@ public class Login
 	{
 		return getRoles (app_user, app_pwd, false);
 	}   //  login
-	
+
 	/**
 	 * Get Authenticated User ID
 	 * @param app_user
@@ -528,7 +535,7 @@ public class Login
 			});
 		}).onFailure(throwable -> {
 			log.log(Level.SEVERE, sql.toString(), throwable);
-			log.saveError("DBLogin", throwable);
+//			log.saveError("DBLogin", throwable);
 		});
 
 		if (tryRoles.isFailure())
@@ -1317,5 +1324,8 @@ public class Login
 	{
 		return null;
 	}	//	getPrincipal
-	
+
+	public Integer getAuthenticatedUserId() {
+		return authenticatedUserId;
+	}
 }	//	Login
